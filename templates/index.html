@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-music"></i>
+            RockSound
+        </div>
+        <ul class="menu">
+            <li class="menu-item active" data-target="view-dashboard">
+                <i class="fa-solid fa-house"></i>
+                Dashboard
+            </li>
+            <li class="menu-item" data-target="view-noise">
+                <i class="fa-solid fa-sliders"></i>
+                Noise Reduction
+            </li>
+            <li class="menu-item" data-target="view-isolation">
+                <i class="fa-solid fa-guitar"></i>
+                Instrument Isolation
+            </li>
+            <li class="menu-item" data-target="view-spectrogram">
+                <i class="fa-solid fa-wave-square"></i>
+                Spectrogram
+            </li>
+            <li class="menu-item" data-target="view-stems">
+                <i class="fa-solid fa-layer-group"></i>
+                Stems Mixing
+            </li>
+            <li class="menu-item" data-target="view-stems">
+                <i class="fa-solid fa-gear"></i>
+                Settings
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="view-section active">
+            <header>
+                <div>
+                    <h1>Dashboard</h1>
+                    <p class="subtitle">Welcome to your Rock Sound Analysis Studio</p>
+                </div>
+            </header>
+            <div class="card-grid">
+                <div class="card" onclick="switchView('view-spectrogram')">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-wave-square"></i>
+                    </div>
+                    <h3>Spectrogram</h3>
+                    <p>Analyze frequency spectrum of your rock tracks.</p>
+                </div>
+
+                <div class="card" onclick="switchView('view-noise')">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3>Clean Up</h3>
+                    <p>Remove background noise.</p>
+                </div>
+
+                <div class="card" onclick="switchView('view-isolation')">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-drum"></i>
+                    </div>
+                    <h3>Drums & Bass</h3>
+                    <p>Isolate instruments using AI.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spectrogram View -->
+        <div id="view-spectrogram" class="view-section">
+            <header>
+                <h1>Spectrogram Analysis</h1>
+            </header>
+            <div class="upload-area" id="upload-spectrogram">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <h3>Click to Upload Track for Spectrogram</h3>
+                <p>Supports MP3, WAV, FLAC</p>
+                <input type="file" id="file-spectrogram" hidden accept="audio/*">
+            </div>
+            <div id="result-spectrogram" style="margin-top: 2rem; display:none;">
+                <h3>Analysis Result</h3>
+                <p class="status-text">Processing...</p>
+                <div class="image-container" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <!-- Noise Reduction View -->
+        <div id="view-noise" class="view-section">
+            <header>
+                <h1>Noise Reduction</h1>
+            </header>
+            <div class="upload-area" id="upload-noise">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <h3>Click to Upload Track for Clean Up</h3>
+                <p>Supports MP3, WAV, FLAC</p>
+                <input type="file" id="file-noise" hidden accept="audio/*">
+            </div>
+            <div id="result-noise" style="margin-top: 2rem; display:none;">
+                <h3>Cleaned Audio</h3>
+                <p class="status-text">Processing...</p>
+                <div class="audio-container" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <!-- Isolation View -->
+        <div id="view-isolation" class="view-section">
+            <header>
+                <h1>Instrument Isolation</h1>
+            </header>
+            <div class="upload-area" id="upload-isolation">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <h3>Click to Upload Track for Separation</h3>
+                <p>Separate Drums, Bass, and Other</p>
+                <input type="file" id="file-isolation" hidden accept="audio/*">
+            </div>
+            <div id="result-isolation" style="margin-top: 2rem; display:none;">
+                <h3>Separated Stems</h3>
+                <p class="status-text">Processing...</p>
+                <div class="stems-container" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <!-- Stems Mixing View -->
+        <div id="view-stems" class="view-section">
+            <header>
+                <h1>Stems Mixing</h1>
+            </header>
+            <p>Coming soon...</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Navigation Logic
+        const menuItems = document.querySelectorAll('.menu-item');
+        const sections = document.querySelectorAll('.view-section');
+
+        function switchView(targetId) {
+            // Update active section
+            sections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetId) section.classList.add('active');
+            });
+
+            // Update active menu item
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.target === targetId) item.classList.add('active');
+            });
+        }
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.dataset.target;
+                if (target) switchView(target);
+            });
+        });
+
+        // Generic Upload & Process Handler
+        async function handleProcess(fileInputId, endpoint, resultContainerId, renderCallback) {
+            const fileInput = document.getElementById(fileInputId);
+            const resultContainer = document.getElementById(resultContainerId);
+            const statusText = resultContainer.querySelector('.status-text');
+
+            fileInput.click();
+
+            fileInput.onchange = async (e) => {
+                if (!e.target.files.length) return;
+                const file = e.target.files[0];
+
+                // UI Updates
+                resultContainer.style.display = 'block';
+                statusText.textContent = `Uploading ${file.name}...`;
+                // Clear previous results
+                const contentDiv = resultContainer.querySelector('div');
+                contentDiv.innerHTML = '';
+
+                // 1. Upload
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const upRes = await fetch('/upload', { method: 'POST', body: formData });
+                    const upData = await upRes.json();
+                    if (!upRes.ok) throw new Error(upData.error || 'Upload failed');
+
+                    // 2. Process
+                    statusText.textContent = 'Processing...';
+                    const procRes = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: upData.filename })
+                    });
+                    const procData = await procRes.json();
+                    if (!procRes.ok) throw new Error(procData.error || 'Processing failed');
+
+                    statusText.textContent = 'Complete';
+                    renderCallback(contentDiv, procData);
+
+                } catch (err) {
+                    statusText.textContent = 'Error: ' + err.message;
+                    statusText.style.color = '#f78166';
+                } finally {
+                    fileInput.value = ''; // Reset
+                }
+            };
+        }
+
+        // Setup Event Listeners
+        document.getElementById('upload-spectrogram').addEventListener('click', () => {
+            handleProcess('file-spectrogram', '/analyze/spectrogram', 'result-spectrogram', (container, data) => {
+                const img = document.createElement('img');
+                img.src = data.spectrogram_url;
+                img.style.width = '100%';
+                img.style.borderRadius = '8px';
+                container.appendChild(img);
+            });
+        });
+
+        document.getElementById('upload-noise').addEventListener('click', () => {
+            handleProcess('file-noise', '/analyze/denoise', 'result-noise', (container, data) => {
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = data.audio_url;
+                audio.style.width = '100%';
+                container.appendChild(audio);
+            });
+        });
+
+        document.getElementById('upload-isolation').addEventListener('click', () => {
+            handleProcess('file-isolation', '/analyze/isolation', 'result-isolation', (container, data) => {
+                // Render stems
+                Object.entries(data.stems).forEach(([name, url]) => {
+                    const row = document.createElement('div');
+                    row.className = 'stem-player';
+                    row.innerHTML = `
+                        <div class="stem-name">${name.toUpperCase()}</div>
+                        <audio controls src="${url}"></audio>
+                    `;
+                    container.appendChild(row);
+                });
+            });
+        });
+
+    </script>
+</body>
+
+</html>

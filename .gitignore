@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Uploads and Static generated content
+uploads/
+static/spectrograms/
+
+# IDEs
+.vscode/
+.idea/
