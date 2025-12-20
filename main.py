@@ -15,6 +15,7 @@ import numpy as np
 # Import custom modules
 from src.isolator import isolate_rock_instruments
 from src.effects import apply_audio_effects
+from src.analyzer import analyze_audio_features
 import uuid
 
 # Resolve NoBackendError for librosa by providing static ffmpeg
@@ -53,7 +54,7 @@ async def upload_file(file: UploadFile = File(...)):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.post("/analyze/spectrogram")
-async def generate_spectrogram(request: Request):
+async def perform_audio_analysis(request: Request):
     data = await request.json()
     filename = data.get("filename")
     
@@ -65,26 +66,11 @@ async def generate_spectrogram(request: Request):
         raise HTTPException(status_code=404, detail="File not found")
 
     try:
-        y, sr = librosa.load(file_path, sr=None)
-        D = librosa.amplitude_to_db(np.abs(librosa.stft(y)), ref=np.max)
-        
-        plt.figure(figsize=(10, 4))
-        librosa.display.specshow(D, sr=sr, x_axis='time', y_axis='log')
-        plt.colorbar(format='%+2.0f dB')
-        plt.title('Spectrogram')
-        plt.tight_layout()
-        
-        output_filename = f"{filename}_spectrogram.png"
-        output_path = SPECTROGRAM_DIR / output_filename
-        plt.savefig(output_path)
-        plt.close()
-        
-        return JSONResponse(content={
-            "spectrogram_url": f"/static/spectrograms/{output_filename}",
-            "message": "Spectrogram generated successfully"
-        })
+        analysis_results = analyze_audio_features(file_path, SPECTROGRAM_DIR)
+        return JSONResponse(content=analysis_results)
     except Exception as e:
-        plt.close()
+        import traceback
+        traceback.print_exc()
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.post("/analyze/denoise")

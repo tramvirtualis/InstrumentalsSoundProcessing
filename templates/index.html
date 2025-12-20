@@ -29,14 +29,14 @@
                 Instrument Isolation
             </li>
             <li class="menu-item" data-target="view-spectrogram">
-                <i class="fa-solid fa-wave-square"></i>
-                Spectrogram
+                <i class="fa-solid fa-microscope"></i>
+                Audio Analysis
             </li>
             <li class="menu-item" data-target="view-stems">
-                <i class="fa-solid fa-layer-group"></i>
-                Stems Mixing
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Effects Studio
             </li>
-            <li class="menu-item" data-target="view-stems">
+            <li class="menu-item">
                 <i class="fa-solid fa-gear"></i>
                 Settings
             </li>
@@ -55,45 +55,53 @@
             <div class="card-grid">
                 <div class="card" onclick="switchView('view-spectrogram')">
                     <div class="card-icon">
-                        <i class="fa-solid fa-wave-square"></i>
+                        <i class="fa-solid fa-microscope"></i>
                     </div>
-                    <h3>Spectrogram</h3>
-                    <p>Analyze frequency spectrum of your rock tracks.</p>
+                    <h3>Audio Analysis</h3>
+                    <p>BPM, Key & Spectrogram</p>
                 </div>
 
                 <div class="card" onclick="switchView('view-noise')">
                     <div class="card-icon">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <i class="fa-solid fa-ear-muffs"></i>
                     </div>
-                    <h3>Clean Up</h3>
+                    <h3>Noise Reduction</h3>
                     <p>Remove background noise.</p>
                 </div>
 
                 <div class="card" onclick="switchView('view-isolation')">
                     <div class="card-icon">
-                        <i class="fa-solid fa-drum"></i>
+                        <i class="fa-solid fa-guitar"></i>
                     </div>
-                    <h3>Drums & Bass</h3>
-                    <p>Isolate instruments using AI.</p>
+                    <h3>Instrument Isolation</h3>
+                    <p>Separate Vocals, Guitar, Drums & Bass.</p>
+                </div>
+
+                <div class="card" onclick="switchView('view-stems')">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3>Effects Studio</h3>
+                    <p>Pitch, Speed & Pro Mixing.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Spectrogram View -->
+        <!-- Spectrogram/Analysis View -->
         <div id="view-spectrogram" class="view-section">
             <header>
-                <h1>Spectrogram Analysis</h1>
+                <h1>Audio Analysis</h1>
+                <p class="subtitle">Extract technical insights from your audio</p>
             </header>
             <div class="upload-area" id="upload-spectrogram">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <h3>Click to Upload Track for Spectrogram</h3>
-                <p>Supports MP3, WAV, FLAC</p>
+                <i class="fa-solid fa-microscope"></i>
+                <h3>Upload for Analysis</h3>
+                <p>BPM, Key, Spectrogram & Waveform</p>
                 <input type="file" id="file-spectrogram" hidden accept="audio/*">
             </div>
-            <div id="result-spectrogram" style="margin-top: 2rem; display:none;">
-                <h3>Analysis Result</h3>
+            <div id="result-spectrogram" class="analysis-results" style="display:none; margin-top: 2rem;">
                 <p class="status-text">Processing...</p>
-                <div class="image-container" style="margin-top: 1rem;"></div>
+                <div class="analysis-content"></div>
             </div>
         </div>
 
@@ -217,18 +225,28 @@
             const resultContainer = document.getElementById(resultContainerId);
             const statusText = resultContainer.querySelector('.status-text');
 
-            fileInput.click();
-
             fileInput.onchange = async (e) => {
                 if (!e.target.files.length) return;
                 const file = e.target.files[0];
 
                 // UI Updates
                 resultContainer.style.display = 'block';
-                statusText.textContent = `Uploading ${file.name}...`;
-                // Clear previous results
-                const contentDiv = resultContainer.querySelector('div');
-                contentDiv.innerHTML = '';
+                if (statusText) {
+                    statusText.textContent = `Uploading ${file.name}...`;
+                    statusText.style.display = 'block';
+                    statusText.style.color = 'var(--text)';
+                }
+
+                let contentDiv = resultContainer.querySelector('div') || resultContainer;
+                if (contentDiv && contentDiv !== resultContainer) contentDiv.innerHTML = '';
+                else if (contentDiv === resultContainer) {
+                    // If no child div, clear everything except statusText
+                    Array.from(resultContainer.children).forEach(child => {
+                        if (!child.classList.contains('status-text') && child.tagName !== 'H3') {
+                            child.remove();
+                        }
+                    });
+                }
 
                 // 1. Upload
                 const formData = new FormData();
@@ -240,7 +258,7 @@
                     if (!upRes.ok) throw new Error(upData.error || 'Upload failed');
 
                     // 2. Process
-                    statusText.textContent = 'Processing...';
+                    if (statusText) statusText.textContent = 'Processing...';
                     const procRes = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -249,26 +267,43 @@
                     const procData = await procRes.json();
                     if (!procRes.ok) throw new Error(procData.error || 'Processing failed');
 
-                    statusText.textContent = 'Complete';
+                    if (statusText) statusText.textContent = 'Complete';
                     renderCallback(contentDiv, procData);
 
                 } catch (err) {
-                    statusText.textContent = 'Error: ' + err.message;
-                    statusText.style.color = '#f78166';
+                    if (statusText) {
+                        statusText.textContent = 'Error: ' + err.message;
+                        statusText.style.color = '#f78166';
+                    } else {
+                        alert('Error: ' + err.message);
+                    }
                 } finally {
                     fileInput.value = ''; // Reset
                 }
             };
+
+            fileInput.click();
         }
 
         // Setup Event Listeners
         document.getElementById('upload-spectrogram').addEventListener('click', () => {
             handleProcess('file-spectrogram', '/analyze/spectrogram', 'result-spectrogram', (container, data) => {
-                const img = document.createElement('img');
-                img.src = data.spectrogram_url;
-                img.style.width = '100%';
-                img.style.borderRadius = '8px';
-                container.appendChild(img);
+                container.innerHTML = `
+                    <div class="analysis-grid">
+                        <div class="stat-card"><span class="label">BPM</span><span class="value">${data.bpm}</span></div>
+                        <div class="stat-card"><span class="label">Key</span><span class="value">${data.key}</span></div>
+                        <div class="stat-card"><span class="label">Duration</span><span class="value">${data.duration}s</span></div>
+                        <div class="stat-rate stat-card"><span class="label">Sample Rate</span><span class="value">${data.sample_rate}Hz</span></div>
+                    </div>
+                    <div>
+                        <h3>Spectrogram (Log-F)</h3>
+                        <img src="${data.spectrogram_url}" class="analysis-img">
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <h3>Waveform Envelope</h3>
+                        <img src="${data.waveform_url}" class="analysis-img">
+                    </div>
+                `;
             });
         });
 
