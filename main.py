@@ -15,6 +15,13 @@ import numpy as np
 # Import custom modules
 from src.audio_processor import isolate_rock_instruments
 
+# Resolve NoBackendError for librosa by providing static ffmpeg
+try:
+    import static_ffmpeg
+    static_ffmpeg.add_paths()
+except ImportError:
+    print("static-ffmpeg not found, please install it.")
+
 app = FastAPI()
 
 # Directory setup
@@ -106,8 +113,10 @@ async def isolate_instruments(request: Request):
         })
     except Exception as e:
         import traceback
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"ERROR: {error_msg}")
         traceback.print_exc()
-        return JSONResponse(content={"error": f"Separation failed: {str(e)}"}, status_code=500)
+        return JSONResponse(content={"error": f"Separation failed: {error_msg}"}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn
