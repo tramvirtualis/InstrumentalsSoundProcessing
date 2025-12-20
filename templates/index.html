@@ -44,82 +44,60 @@
     </div>
 
     <div class="main-content">
+        <!-- Global Session Bar -->
+        <div id="session-bar" class="session-bar" style="display:none;">
+            <div class="session-info">
+                <i class="fa-solid fa-file-audio"></i>
+                <span id="active-filename">No file selected</span>
+            </div>
+            <button class="btn-reset" onclick="resetSession()">
+                <i class="fa-solid fa-rotate-left"></i> Reset & New File
+            </button>
+        </div>
+
         <!-- Dashboard View -->
         <div id="view-dashboard" class="view-section active">
             <header>
-                <div>
-                    <h1>Dashboard</h1>
-                    <p class="subtitle">Welcome to your Rock Sound Analysis Studio</p>
-                </div>
+                <h1>Welcome to RockSound</h1>
+                <p class="subtitle">Complete pro-audio processing studio</p>
             </header>
-            <div class="card-grid">
+
+            <div id="main-upload-area" class="upload-area">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <h3>Start here: Upload your track</h3>
+                <p>Supports MP3, WAV, FLAC</p>
+                <input type="file" id="file-main" hidden accept="audio/*">
+            </div>
+
+            <div class="card-grid" id="dashboard-features" style="display:none;">
                 <div class="card" onclick="switchView('view-spectrogram')">
-                    <div class="card-icon">
-                        <i class="fa-solid fa-microscope"></i>
-                    </div>
-                    <h3>Audio Analysis</h3>
-                    <p>BPM, Key & Spectrogram</p>
+                    <div class="card-icon"><i class="fa-solid fa-microscope"></i></div>
+                    <h3>Analyze</h3>
                 </div>
-
-                <div class="card" onclick="switchView('view-noise')">
-                    <div class="card-icon">
-                        <i class="fa-solid fa-ear-muffs"></i>
-                    </div>
-                    <h3>Noise Reduction</h3>
-                    <p>Remove background noise.</p>
-                </div>
-
                 <div class="card" onclick="switchView('view-isolation')">
-                    <div class="card-icon">
-                        <i class="fa-solid fa-guitar"></i>
-                    </div>
-                    <h3>Instrument Isolation</h3>
-                    <p>Separate Vocals, Guitar, Drums & Bass.</p>
+                    <div class="card-icon"><i class="fa-solid fa-guitar"></i></div>
+                    <h3>Isolate</h3>
                 </div>
-
                 <div class="card" onclick="switchView('view-stems')">
-                    <div class="card-icon">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    </div>
-                    <h3>Effects Studio</h3>
-                    <p>Pitch, Speed & Pro Mixing.</p>
+                    <div class="card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h3>Edit Effects</h3>
                 </div>
             </div>
         </div>
 
-        <!-- Spectrogram/Analysis View -->
+        <!-- Audio Analysis View -->
         <div id="view-spectrogram" class="view-section">
             <header>
                 <h1>Audio Analysis</h1>
-                <p class="subtitle">Extract technical insights from your audio</p>
+                <p class="subtitle">Extract technical insights</p>
             </header>
-            <div class="upload-area" id="upload-spectrogram">
+            <div id="analysis-placeholder" class="empty-state">
                 <i class="fa-solid fa-microscope"></i>
-                <h3>Upload for Analysis</h3>
-                <p>BPM, Key, Spectrogram & Waveform</p>
-                <input type="file" id="file-spectrogram" hidden accept="audio/*">
+                <h3>Ready to Analyze</h3>
+                <button class="btn-primary" id="btn-run-analysis">Start Analysis</button>
             </div>
-            <div id="result-spectrogram" class="analysis-results" style="display:none; margin-top: 2rem;">
-                <p class="status-text">Processing...</p>
+            <div id="result-spectrogram" class="analysis-results" style="display:none;">
                 <div class="analysis-content"></div>
-            </div>
-        </div>
-
-        <!-- Noise Reduction View -->
-        <div id="view-noise" class="view-section">
-            <header>
-                <h1>Noise Reduction</h1>
-            </header>
-            <div class="upload-area" id="upload-noise">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <h3>Click to Upload Track for Clean Up</h3>
-                <p>Supports MP3, WAV, FLAC</p>
-                <input type="file" id="file-noise" hidden accept="audio/*">
-            </div>
-            <div id="result-noise" style="margin-top: 2rem; display:none;">
-                <h3>Cleaned Audio</h3>
-                <p class="status-text">Processing...</p>
-                <div class="audio-container" style="margin-top: 1rem;"></div>
             </div>
         </div>
 
@@ -128,16 +106,13 @@
             <header>
                 <h1>Instrument Isolation</h1>
             </header>
-            <div class="upload-area" id="upload-isolation">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <h3>Click to Upload Track for Separation</h3>
-                <p>Separate Drums, Bass, and Other</p>
-                <input type="file" id="file-isolation" hidden accept="audio/*">
+            <div id="isolation-placeholder" class="empty-state">
+                <i class="fa-solid fa-guitar"></i>
+                <h3>Ready to Isolate Stems</h3>
+                <button class="btn-primary" id="btn-run-isolation">Separate Instruments</button>
             </div>
-            <div id="result-isolation" style="margin-top: 2rem; display:none;">
-                <h3>Separated Stems</h3>
-                <p class="status-text">Processing...</p>
-                <div class="stems-container" style="margin-top: 1rem;"></div>
+            <div id="result-isolation" class="analysis-results" style="display:none;">
+                <div class="stems-container"></div>
             </div>
         </div>
 
@@ -145,48 +120,38 @@
         <div id="view-stems" class="view-section">
             <header>
                 <h1>Effects Studio</h1>
-                <p class="subtitle">Fine-tune your audio with professional effects</p>
             </header>
 
-            <div class="upload-area" id="upload-effects">
-                <i class="fa-solid fa-file-audio"></i>
-                <h3>Click to Upload Audio for Effects</h3>
-                <p>Apply Pitch, Volume, Pan, and Reverb</p>
-                <input type="file" id="file-effects" hidden accept="audio/*">
+            <div id="studio-mode-selector" class="studio-toggle-container" style="display:none;">
+                <button class="toggle-btn active" id="btn-mode-stems">Isolated Stems</button>
+                <button class="toggle-btn" id="btn-mode-single">Original File</button>
             </div>
 
-            <div id="effects-editor" style="display:none; margin-top: 2rem;">
-                <div class="mixer-tracks" id="editor-track">
-                    <!-- Controls for the single file -->
-                </div>
-
-                <div class="mixer-master">
-                    <h3>Process Result</h3>
-                    <div id="master-controls">
-                        <button class="btn-primary" id="btn-process-effect">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Apply & Export
-                        </button>
-                        <div id="effect-result" style="margin-top: 1rem; display:none;">
-                            <p>Processed Audio:</p>
-                            <audio id="effect-preview" controls style="width: 100%;"></audio>
-                        </div>
-                    </div>
+            <div id="mixer-placeholder" class="empty-state">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <h3>Effects & Mixing</h3>
+                <p>Choose your workspace mode above</p>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button class="btn-primary" onclick="setStudioMode('single')">Process Original Track</button>
+                    <button class="btn-secondary" onclick="switchView('view-isolation')">Go to Isolation First</button>
                 </div>
             </div>
 
-            <!-- Keep the multi-stem mixer container but separate it slightly or allow reuse -->
-            <div id="mixer-container" style="display:none; margin-top: 2rem;">
-                <h3>Multi-Stem Mixer</h3>
-                <div class="mixer-tracks" id="mixer-tracks">
-                    <!-- Stem controls will be injected here -->
-                </div>
+            <div id="effects-editor" style="display:none;">
+                <div class="mixer-tracks" id="editor-track"></div>
                 <div class="mixer-master">
-                    <button class="btn-primary" id="btn-render-mix">
-                        <i class="fa-solid fa-file-export"></i> Render & Export Mix
-                    </button>
-                    <div id="render-result" style="margin-top: 1rem; display:none;">
-                        <audio id="master-preview" controls style="width: 100%;"></audio>
-                    </div>
+                    <button class="btn-primary" id="btn-process-single">Apply & Export</button>
+                    <div id="single-result" style="display:none; margin-top: 1rem;"><audio controls id="single-preview"
+                            style="width:100%"></audio></div>
+                </div>
+            </div>
+
+            <div id="mixer-container" style="display:none;">
+                <div class="mixer-tracks" id="mixer-tracks"></div>
+                <div class="mixer-master">
+                    <button class="btn-primary" id="btn-render-mix">Render Mix</button>
+                    <div id="render-result" style="display:none; margin-top: 1rem;"><audio controls id="master-preview"
+                            style="width:100%"></audio></div>
                 </div>
             </div>
         </div>
@@ -194,22 +159,28 @@
     </div>
 
     <script>
+        // Global Session State
+        let session = {
+            filename: "",
+            analysis: null,
+            stems: null,
+            studioMode: "stems" // 'stems' or 'single'
+        };
+
         // Navigation Logic
         const menuItems = document.querySelectorAll('.menu-item');
         const sections = document.querySelectorAll('.view-section');
 
         function switchView(targetId) {
-            // Update active section
-            sections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === targetId) section.classList.add('active');
+            sections.forEach(sec => {
+                sec.classList.remove('active');
+                if (sec.id === targetId) sec.classList.add('active');
             });
-
-            // Update active menu item
             menuItems.forEach(item => {
                 item.classList.remove('active');
                 if (item.dataset.target === targetId) item.classList.add('active');
             });
+            updateSessionUI(); // Sync UI whenever switching tabs
         }
 
         menuItems.forEach(item => {
@@ -219,309 +190,343 @@
             });
         });
 
-        // Generic Upload & Process Handler
-        async function handleProcess(fileInputId, endpoint, resultContainerId, renderCallback) {
-            const fileInput = document.getElementById(fileInputId);
-            const resultContainer = document.getElementById(resultContainerId);
-            const statusText = resultContainer.querySelector('.status-text');
+        // Initialize Upload
+        const mainUploadArea = document.getElementById('main-upload-area');
+        const fileMain = document.getElementById('file-main');
 
-            fileInput.onchange = async (e) => {
-                if (!e.target.files.length) return;
-                const file = e.target.files[0];
+        mainUploadArea.addEventListener('click', () => fileMain.click());
 
-                // UI Updates
-                resultContainer.style.display = 'block';
-                if (statusText) {
-                    statusText.textContent = `Uploading ${file.name}...`;
-                    statusText.style.display = 'block';
-                    statusText.style.color = 'var(--text)';
+        fileMain.onchange = async (e) => {
+            if (!e.target.files.length) return;
+            const file = e.target.files[0];
+
+            // 1. Show Loading on Dashboard
+            mainUploadArea.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><h3>Uploading ${file.name}...</h3>`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Upload failed");
+
+                session.filename = data.filename;
+                updateSessionUI();
+            } catch (err) {
+                alert(err.message);
+                resetSession();
+            }
+        };
+
+        function updateSessionUI() {
+            const hasFile = !!session.filename;
+            document.getElementById('session-bar').style.display = hasFile ? 'flex' : 'none';
+            document.getElementById('active-filename').textContent = session.filename || "No file selected";
+
+            // Dashboard UI
+            document.getElementById('main-upload-area').style.display = hasFile ? 'none' : 'flex';
+            document.getElementById('dashboard-features').style.display = hasFile ? 'grid' : 'none';
+
+            // Feature view placeholders (simple version)
+            document.getElementById('analysis-placeholder').style.display = (hasFile && !session.analysis) ? 'flex' : 'none';
+            document.getElementById('result-spectrogram').style.display = session.analysis ? 'block' : 'none';
+            if (session.analysis) renderAnalysis(session.analysis);
+
+            document.getElementById('isolation-placeholder').style.display = (hasFile && !session.stems) ? 'flex' : 'none';
+            document.getElementById('result-isolation').style.display = session.stems ? 'block' : 'none';
+            if (session.stems) renderStems(session.stems);
+
+            // Studio UI
+            const modeSelector = document.getElementById('studio-mode-selector');
+            modeSelector.style.display = hasFile ? 'flex' : 'none';
+
+            const hasStems = !!session.stems;
+            const mode = session.studioMode;
+
+            // Toggle Buttons
+            document.getElementById('btn-mode-stems').classList.toggle('active', mode === 'stems');
+            document.getElementById('btn-mode-single').classList.toggle('active', mode === 'single');
+
+            // Workspace visibility
+            const pleader = document.getElementById('mixer-placeholder');
+            const meditor = document.getElementById('effects-editor');
+            const mcontainer = document.getElementById('mixer-container');
+
+            pleader.style.display = 'none';
+            meditor.style.display = 'none';
+            mcontainer.style.display = 'none';
+
+            if (mode === 'stems') {
+                if (hasStems) {
+                    mcontainer.style.display = 'block';
+                    setupMixer(session.stems);
+                } else {
+                    pleader.style.display = 'flex';
+                    pleader.querySelector('p').textContent = "Please isolate instruments first to use multi-track mixer.";
                 }
-
-                let contentDiv = resultContainer.querySelector('div') || resultContainer;
-                if (contentDiv && contentDiv !== resultContainer) contentDiv.innerHTML = '';
-                else if (contentDiv === resultContainer) {
-                    // If no child div, clear everything except statusText
-                    Array.from(resultContainer.children).forEach(child => {
-                        if (!child.classList.contains('status-text') && child.tagName !== 'H3') {
-                            child.remove();
-                        }
-                    });
+            } else { // mode === 'single'
+                meditor.style.display = 'block';
+                const container = document.getElementById('editor-track');
+                if (container.children.length === 0) {
+                    createTrackStrip("Original Track", container);
                 }
-
-                // 1. Upload
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const upRes = await fetch('/upload', { method: 'POST', body: formData });
-                    const upData = await upRes.json();
-                    if (!upRes.ok) throw new Error(upData.error || 'Upload failed');
-
-                    // 2. Process
-                    if (statusText) statusText.textContent = 'Processing...';
-                    const procRes = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename: upData.filename })
-                    });
-                    const procData = await procRes.json();
-                    if (!procRes.ok) throw new Error(procData.error || 'Processing failed');
-
-                    if (statusText) statusText.textContent = 'Complete';
-                    renderCallback(contentDiv, procData);
-
-                } catch (err) {
-                    if (statusText) {
-                        statusText.textContent = 'Error: ' + err.message;
-                        statusText.style.color = '#f78166';
-                    } else {
-                        alert('Error: ' + err.message);
-                    }
-                } finally {
-                    fileInput.value = ''; // Reset
-                }
-            };
-
-            fileInput.click();
+            }
         }
 
-        // Setup Event Listeners
-        document.getElementById('upload-spectrogram').addEventListener('click', () => {
-            handleProcess('file-spectrogram', '/analyze/spectrogram', 'result-spectrogram', (container, data) => {
-                container.innerHTML = `
-                    <div class="analysis-grid">
-                        <div class="stat-card"><span class="label">BPM</span><span class="value">${data.bpm}</span></div>
-                        <div class="stat-card"><span class="label">Key</span><span class="value">${data.key}</span></div>
-                        <div class="stat-card"><span class="label">Duration</span><span class="value">${data.duration}s</span></div>
-                        <div class="stat-rate stat-card"><span class="label">Sample Rate</span><span class="value">${data.sample_rate}Hz</span></div>
-                    </div>
-                    <div>
-                        <h3>Spectrogram (Log-F)</h3>
-                        <img src="${data.spectrogram_url}" class="analysis-img">
-                    </div>
-                    <div style="margin-top: 2rem;">
-                        <h3>Waveform Envelope</h3>
-                        <img src="${data.waveform_url}" class="analysis-img">
-                    </div>
-                `;
-            });
-        });
+        function setStudioMode(mode) {
+            session.studioMode = mode;
+            updateSessionUI();
+        }
 
-        document.getElementById('upload-noise').addEventListener('click', () => {
-            handleProcess('file-noise', '/analyze/denoise', 'result-noise', (container, data) => {
-                const audio = document.createElement('audio');
-                audio.controls = true;
-                audio.src = data.audio_url;
-                audio.style.width = '100%';
-                container.appendChild(audio);
-            });
-        });
+        document.getElementById('btn-mode-stems').onclick = () => setStudioMode('stems');
+        document.getElementById('btn-mode-single').onclick = () => setStudioMode('single');
 
-        let currentStems = {};
-        let currentFilename = "";
+        function resetSession() {
+            session = { filename: "", analysis: null, stems: null };
+            document.getElementById('file-main').value = '';
+            // Reset Dashboard icons
+            mainUploadArea.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><h3>Start here: Upload your track</h3><p>Supports MP3, WAV, FLAC</p>`;
 
-        // Setup Isolation handling to populate Mixer
-        document.getElementById('upload-isolation').addEventListener('click', () => {
-            handleProcess('file-isolation', '/analyze/isolation', 'result-isolation', (container, data) => {
-                container.innerHTML = '';
-                currentStems = data.stems || {};
+            // Clear result containers
+            document.getElementById('result-spectrogram').querySelector('.analysis-content').innerHTML = '';
+            document.getElementById('result-isolation').querySelector('.stems-container').innerHTML = '';
+            document.getElementById('mixer-tracks').innerHTML = '';
+            document.getElementById('editor-track').innerHTML = '';
 
-                if (Object.keys(currentStems).length === 0) {
-                    container.innerHTML = '<p style="color: #f78166;">No significant instruments detected.</p>';
-                    return;
-                }
+            updateSessionUI();
+            switchView('view-dashboard');
+        }
 
-                // Render in Isolation view
-                Object.entries(currentStems).forEach(([label, url]) => {
-                    const row = document.createElement('div');
-                    row.className = 'stem-player';
-                    row.innerHTML = `
-                        <div class="stem-name">${label}</div>
-                        <audio controls src="${url}"></audio>
-                    `;
-                    container.appendChild(row);
+        // Feature Actions
+        document.getElementById('btn-run-analysis').onclick = async () => {
+            const btn = document.getElementById('btn-run-analysis');
+            const resContainer = document.getElementById('result-spectrogram');
+            const status = resContainer.querySelector('.status-text');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            resContainer.style.display = 'block';
+
+            try {
+                const res = await fetch('/analyze/spectrogram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
                 });
+                const data = await res.json();
+                session.analysis = data;
+                renderAnalysis(data);
+                updateSessionUI();
+            } catch (err) {
+                status.textContent = "Error: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Start Analysis";
+            }
+        };
 
-                // Prepare Mixer
-                setupMixer(currentStems);
+        document.getElementById('btn-run-isolation').onclick = async () => {
+            const btn = document.getElementById('btn-run-isolation');
+            const resContainer = document.getElementById('result-isolation');
+            const status = resContainer.querySelector('.status-text');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            resContainer.style.display = 'block';
+
+            try {
+                const res = await fetch('/analyze/isolation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+                session.stems = data.stems;
+                renderStems(data.stems);
+                updateSessionUI();
+            } catch (err) {
+                status.textContent = "Error: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Separate Instruments";
+            }
+        };
+
+        function renderAnalysis(data) {
+            const container = document.getElementById('result-spectrogram').querySelector('.analysis-content');
+            container.innerHTML = `
+                <div class="analysis-grid">
+                    <div class="stat-card"><span class="label">BPM</span><span class="value">${data.bpm}</span></div>
+                    <div class="stat-card"><span class="label">Key</span><span class="value">${data.key}</span></div>
+                    <div class="stat-card"><span class="label">Duration</span><span class="value">${data.duration}s</span></div>
+                    <div class="stat-card"><span class="label">Sample Rate</span><span class="value">${data.sample_rate}Hz</span></div>
+                </div>
+                <div><h3>Spectrogram</h3><img src="${data.spectrogram_url}" class="analysis-img"></div>
+                <div style="margin-top:2rem"><h3>Waveform</h3><img src="${data.waveform_url}" class="analysis-img"></div>
+            `;
+        }
+
+        function renderStems(stems) {
+            const container = document.getElementById('result-isolation').querySelector('.stems-container');
+            container.innerHTML = '';
+            Object.entries(stems).forEach(([label, url]) => {
+                const row = document.createElement('div');
+                row.className = 'stem-player';
+                row.innerHTML = `<div class="stem-name">${label}</div><audio controls src="${url}"></audio>`;
+                container.appendChild(row);
             });
-        });
+        }
 
-        let currentEditorFile = "";
+        // Mixer Logic
+        function setupMixer(stems) {
+            const container = document.getElementById('mixer-tracks');
+            const existingStems = Array.from(container.querySelectorAll('.track-strip')).map(s => s.dataset.label);
+            const newStems = Object.keys(stems);
+
+            // Only rebuild if the labels changed
+            if (JSON.stringify(existingStems) === JSON.stringify(newStems)) return;
+
+            container.innerHTML = '';
+            newStems.forEach(label => {
+                createTrackStrip(label, container);
+            });
+        }
 
         function createTrackStrip(label, container) {
             const strip = document.createElement('div');
             strip.className = 'track-strip';
+            strip.dataset.label = label;
             strip.innerHTML = `
                 <div class="track-name">${label}</div>
                 
                 <div class="control-group">
-                    <div class="control-label"><span>Volume</span><span class="val">1.0</span></div>
+                    <div class="control-label"><span>Vol</span> <span class="val">1.0</span></div>
                     <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>Speed</span><span class="val">1.0</span>x</div>
+                    <div class="control-label"><span>Speed</span> <span class="val">1.0</span>x</div>
                     <input type="range" class="control-slider speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>Pitch</span><span class="val">0</span></div>
+                    <div class="control-label"><span>Pitch</span> <span class="val">0</span> st</div>
                     <input type="range" class="control-slider pitch-slider" min="-12" max="12" step="1" value="0">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>Pan</span><span class="val">0</span></div>
-                    <input type="range" class="control-slider pan-slider" min="-1" max="1" step="0.1" value="0">
+                    <div class="control-label"><span>Distort</span> <span class="val">0</span>%</div>
+                    <input type="range" class="control-slider dist-slider" min="0" max="1" step="0.1" value="0">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>Distortion</span><span class="val">0</span></div>
-                    <input type="range" class="control-slider distortion-slider" min="0" max="1" step="0.1" value="0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Echo</span><span class="val">0</span></div>
+                    <div class="control-label"><span>Echo</span> <span class="val">0</span>%</div>
                     <input type="range" class="control-slider echo-slider" min="0" max="1" step="0.1" value="0">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>Low-Pass</span><span class="val">20000</span>Hz</div>
-                    <input type="range" class="control-slider lpf-slider" min="20" max="20000" step="100" value="20000">
+                    <div class="control-label"><span>LPF</span> <span class="val">20k</span>Hz</div>
+                    <input type="range" class="control-slider lpf-slider" min="100" max="20000" step="100" value="20000">
                 </div>
 
                 <div class="control-group">
-                    <div class="control-label"><span>High-Pass</span><span class="val">20</span>Hz</div>
-                    <input type="range" class="control-slider hpf-slider" min="20" max="10000" step="100" value="20">
+                    <div class="control-label"><span>HPF</span> <span class="val">20</span>Hz</div>
+                    <input type="range" class="control-slider hpf-slider" min="20" max="5000" step="50" value="20">
                 </div>
 
                 <div class="control-group">
-                    <label style="font-size: 0.75rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                        <input type="checkbox" class="reverb-toggle"> Reverb
-                    </label>
+                    <div class="control-label"><span>Reverb</span> <span class="val">0</span></div>
+                    <input type="range" class="control-slider reverb-slider" min="0" max="1" step="0.1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Pan</span> <span class="val">0</span></div>
+                    <input type="range" class="control-slider pan-slider" min="-1" max="1" step="0.1" value="0">
                 </div>
             `;
-            strip.querySelectorAll('.control-slider').forEach(slider => {
-                slider.oninput = (e) => { e.target.parentElement.querySelector('.val').textContent = e.target.value; };
+
+            strip.querySelectorAll('input').forEach(input => {
+                input.oninput = (e) => {
+                    let val = e.target.value;
+                    if (val >= 1000) val = (val / 1000).toFixed(1) + 'k';
+                    e.target.previousElementSibling.querySelector('.val').textContent = val;
+                };
             });
+
             container.appendChild(strip);
-            return strip;
         }
 
-        // Helper to collect track data from a strip
-        function getTrackData(strip, url, label) {
+        function getTrackData(strip, url) {
             return {
                 url: url,
-                label: label || strip.querySelector('.track-name').textContent,
                 volume: parseFloat(strip.querySelector('.vol-slider').value),
                 speed: parseFloat(strip.querySelector('.speed-slider').value),
                 pitch: parseFloat(strip.querySelector('.pitch-slider').value),
-                pan: parseFloat(strip.querySelector('.pan-slider').value),
-                distortion: parseFloat(strip.querySelector('.distortion-slider').value),
+                distortion: parseFloat(strip.querySelector('.dist-slider').value),
                 echo: parseFloat(strip.querySelector('.echo-slider').value),
                 lpf: parseFloat(strip.querySelector('.lpf-slider').value),
                 hpf: parseFloat(strip.querySelector('.hpf-slider').value),
-                reverb: strip.querySelector('.reverb-toggle').checked
+                reverb: parseFloat(strip.querySelector('.reverb-slider').value),
+                pan: parseFloat(strip.querySelector('.pan-slider').value)
             };
         }
 
-        // Standalone Effect Studio Upload
-        document.getElementById('upload-effects').addEventListener('click', () => {
-            const fileInput = document.getElementById('file-effects');
-            fileInput.click();
-            fileInput.onchange = async (e) => {
-                if (!e.target.files.length) return;
-                const file = e.target.files[0];
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const res = await fetch('/upload', { method: 'POST', body: formData });
-                    const data = await res.json();
-                    currentEditorFile = `/uploads/${data.filename}`;
-
-                    document.getElementById('effects-editor').style.display = 'block';
-                    const container = document.getElementById('editor-track');
-                    container.innerHTML = '';
-                    createTrackStrip(file.name, container);
-
-                } catch (err) { alert('Upload failed'); }
-            };
-        });
-
-        // Standalone Process Button
-        document.getElementById('btn-process-effect').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-process-effect');
-            const strip = document.querySelector('#editor-track .track-strip');
-            if (!strip) return;
-
-            const tracksData = [getTrackData(strip, currentEditorFile, "Main Track")];
-
+        document.getElementById('btn-render-mix').onclick = async () => {
+            const btn = document.getElementById('btn-render-mix');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
+            const tracks = [];
+            document.querySelectorAll('#mixer-tracks .track-strip').forEach(strip => {
+                const label = strip.dataset.label;
+                tracks.push(getTrackData(strip, session.stems[label]));
+            });
+
             try {
                 const res = await fetch('/process/mix', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ stems: tracksData })
+                    body: JSON.stringify({ tracks })
                 });
                 const data = await res.json();
-                document.getElementById('effect-result').style.display = 'block';
-                document.getElementById('effect-preview').src = data.mix_url;
+                const preview = document.getElementById('master-preview');
+                preview.src = data.mix_url;
+                document.getElementById('render-result').style.display = 'block';
+                preview.play();
             } catch (err) { alert(err.message); }
             finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Apply & Export';
+                btn.textContent = "Render Mix";
             }
-        });
+        };
 
-        function setupMixer(stems) {
-            const mixerContainer = document.getElementById('mixer-container');
-            const mixerTracks = document.getElementById('mixer-tracks');
-            mixerTracks.innerHTML = '';
-            mixerContainer.style.display = 'block';
 
-            Object.entries(stems).forEach(([label, url]) => {
-                createTrackStrip(label, mixerTracks);
-            });
-        }
-
-        document.getElementById('btn-render-mix').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-render-mix');
-            const mixerTracks = document.querySelectorAll('#mixer-tracks .track-strip');
-            const tracksData = [];
-
-            mixerTracks.forEach(strip => {
-                const label = strip.querySelector('.track-name').textContent;
-                tracksData.push(getTrackData(strip, currentStems[label], label));
-            });
-
+        document.getElementById('btn-process-single').onclick = async () => {
+            const btn = document.getElementById('btn-process-single');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering...';
+            btn.textContent = "Processing...";
+
+            const strip = document.getElementById('editor-track').querySelector('.track-strip');
+            const track = getTrackData(strip, "/uploads/" + session.filename);
 
             try {
                 const res = await fetch('/process/mix', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ stems: tracksData })
+                    body: JSON.stringify({ tracks: [track] })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Mix failed');
-
-                const resultDiv = document.getElementById('render-result');
-                const preview = document.getElementById('master-preview');
-                resultDiv.style.display = 'block';
+                const preview = document.getElementById('single-preview');
                 preview.src = data.mix_url;
+                document.getElementById('single-result').style.display = 'block';
                 preview.play();
-
-            } catch (err) {
-                alert('Mix Error: ' + err.message);
-            } finally {
+            } catch (err) { alert(err.message); }
+            finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-file-export"></i> Render & Export Mix';
+                btn.textContent = "Apply & Export";
             }
-        });
+        };
 
     </script>
 </body>

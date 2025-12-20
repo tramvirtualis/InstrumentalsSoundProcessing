@@ -109,17 +109,17 @@ async def isolate_instruments(request: Request):
 @app.post("/process/mix")
 async def mix_stems(request: Request):
     data = await request.json()
-    stems = data.get("stems")
-    print(f"DEBUG: Received mix request with {len(stems) if stems else 0} tracks")
-    if not stems:
-        raise HTTPException(status_code=400, detail="Stems data is required")
+    tracks = data.get("tracks") or data.get("stems")
+    print(f"DEBUG: Received mix request with {len(tracks) if tracks else 0} tracks")
+    if not tracks:
+        raise HTTPException(status_code=400, detail="No tracks provided for mixing")
     
     try:
         mix_filename = f"mix_{uuid.uuid4().hex[:8]}.wav"
         output_path = UPLOAD_DIR / mix_filename
         print(f"DEBUG: Output path will be {output_path}")
         
-        success = apply_audio_effects(stems, output_path)
+        success = apply_audio_effects(tracks, output_path)
         
         if success:
             print(f"DEBUG: Mix successful: {output_path}")

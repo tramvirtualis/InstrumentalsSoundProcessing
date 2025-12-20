@@ -11,6 +11,41 @@
     --border-color: #30363d;
 }
 
+/* Studio Toggle */
+.studio-toggle-container {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    width: fit-content;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggle-btn {
+    padding: 0.7rem 1.8rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-hover));
+    color: white;
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.2);
+}
+
+.toggle-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
 /* Mixer UI */
 .mixer-tracks {
     display: flex;
@@ -21,20 +56,96 @@
 }
 
 .track-strip {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 1.5rem 1rem;
-    min-width: 160px;
+    padding: 1.25rem 1rem;
+    min-width: 180px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: transform 0.2s;
+    gap: 0.5rem;
+    transition: all 0.2s;
 }
 
 .track-strip:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Session Bar */
+.session-bar {
+    background: rgba(45, 52, 64, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 107, 0.1);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+}
+
+.session-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.session-info i {
+    color: var(--accent);
+}
+
+.btn-reset {
+    background: rgba(247, 129, 102, 0.1);
+    border: 1px solid rgba(247, 129, 102, 0.3);
+    color: #f78166;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-reset:hover {
+    background: #f78166;
+    color: white;
+}
+
+/* Empty States */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px dashed rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-dim);
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
 }
 
 .track-name {
@@ -61,6 +172,7 @@
 .control-slider {
     width: 100%;
     -webkit-appearance: none;
+    appearance: none;
     height: 4px;
     background: #333;
     border-radius: 2px;
@@ -85,17 +197,12 @@
     text-align: center;
 }
 
-.empty-state {
-    text-align: center;
-    padding: 5rem 2rem;
-    color: var(--text-dim);
-}
-
+/* Analysis Grid */
 .analysis-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
-    margin: 2rem 0;
+    margin: 1.5rem 0;
 }
 
 .stat-card {
@@ -215,6 +322,7 @@ h1 {
     font-weight: 600;
     background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
