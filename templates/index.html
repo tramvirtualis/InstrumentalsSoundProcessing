@@ -242,12 +242,21 @@
 
         document.getElementById('upload-isolation').addEventListener('click', () => {
             handleProcess('file-isolation', '/analyze/isolation', 'result-isolation', (container, data) => {
-                // Render stems
-                Object.entries(data.stems).forEach(([name, url]) => {
+                // Clear previous results
+                container.innerHTML = '';
+
+                // Render stems (only those returned by backend)
+                const stems = data.stems || {};
+                if (Object.keys(stems).length === 0) {
+                    container.innerHTML = '<p style="color: #f78166;">No significant instruments detected in this track.</p>';
+                    return;
+                }
+
+                Object.entries(stems).forEach(([label, url]) => {
                     const row = document.createElement('div');
                     row.className = 'stem-player';
                     row.innerHTML = `
-                        <div class="stem-name">${name.toUpperCase()}</div>
+                        <div class="stem-name">${label}</div>
                         <audio controls src="${url}"></audio>
                     `;
                     container.appendChild(row);
