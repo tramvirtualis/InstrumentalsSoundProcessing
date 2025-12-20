@@ -136,9 +136,51 @@
         <!-- Stems Mixing View -->
         <div id="view-stems" class="view-section">
             <header>
-                <h1>Stems Mixing</h1>
+                <h1>Effects Studio</h1>
+                <p class="subtitle">Fine-tune your audio with professional effects</p>
             </header>
-            <p>Coming soon...</p>
+
+            <div class="upload-area" id="upload-effects">
+                <i class="fa-solid fa-file-audio"></i>
+                <h3>Click to Upload Audio for Effects</h3>
+                <p>Apply Pitch, Volume, Pan, and Reverb</p>
+                <input type="file" id="file-effects" hidden accept="audio/*">
+            </div>
+
+            <div id="effects-editor" style="display:none; margin-top: 2rem;">
+                <div class="mixer-tracks" id="editor-track">
+                    <!-- Controls for the single file -->
+                </div>
+
+                <div class="mixer-master">
+                    <h3>Process Result</h3>
+                    <div id="master-controls">
+                        <button class="btn-primary" id="btn-process-effect">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Apply & Export
+                        </button>
+                        <div id="effect-result" style="margin-top: 1rem; display:none;">
+                            <p>Processed Audio:</p>
+                            <audio id="effect-preview" controls style="width: 100%;"></audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keep the multi-stem mixer container but separate it slightly or allow reuse -->
+            <div id="mixer-container" style="display:none; margin-top: 2rem;">
+                <h3>Multi-Stem Mixer</h3>
+                <div class="mixer-tracks" id="mixer-tracks">
+                    <!-- Stem controls will be injected here -->
+                </div>
+                <div class="mixer-master">
+                    <button class="btn-primary" id="btn-render-mix">
+                        <i class="fa-solid fa-file-export"></i> Render & Export Mix
+                    </button>
+                    <div id="render-result" style="margin-top: 1rem; display:none;">
+                        <audio id="master-preview" controls style="width: 100%;"></audio>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -240,19 +282,22 @@
             });
         });
 
+        let currentStems = {};
+        let currentFilename = "";
+
+        // Setup Isolation handling to populate Mixer
         document.getElementById('upload-isolation').addEventListener('click', () => {
             handleProcess('file-isolation', '/analyze/isolation', 'result-isolation', (container, data) => {
-                // Clear previous results
                 container.innerHTML = '';
+                currentStems = data.stems || {};
 
-                // Render stems (only those returned by backend)
-                const stems = data.stems || {};
-                if (Object.keys(stems).length === 0) {
-                    container.innerHTML = '<p style="color: #f78166;">No significant instruments detected in this track.</p>';
+                if (Object.keys(currentStems).length === 0) {
+                    container.innerHTML = '<p style="color: #f78166;">No significant instruments detected.</p>';
                     return;
                 }
 
-                Object.entries(stems).forEach(([label, url]) => {
+                // Render in Isolation view
+                Object.entries(currentStems).forEach(([label, url]) => {
                     const row = document.createElement('div');
                     row.className = 'stem-player';
                     row.innerHTML = `
@@ -261,10 +306,187 @@
                     `;
                     container.appendChild(row);
                 });
+
+                // Prepare Mixer
+                setupMixer(currentStems);
             });
+        });
+
+        let currentEditorFile = "";
+
+        function createTrackStrip(label, container) {
+            const strip = document.createElement('div');
+            strip.className = 'track-strip';
+            strip.innerHTML = `
+                <div class="track-name">${label}</div>
+                
+                <div class="control-group">
+                    <div class="control-label"><span>Volume</span><span class="val">1.0</span></div>
+                    <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Speed</span><span class="val">1.0</span>x</div>
+                    <input type="range" class="control-slider speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Pitch</span><span class="val">0</span></div>
+                    <input type="range" class="control-slider pitch-slider" min="-12" max="12" step="1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Pan</span><span class="val">0</span></div>
+                    <input type="range" class="control-slider pan-slider" min="-1" max="1" step="0.1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Distortion</span><span class="val">0</span></div>
+                    <input type="range" class="control-slider distortion-slider" min="0" max="1" step="0.1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Echo</span><span class="val">0</span></div>
+                    <input type="range" class="control-slider echo-slider" min="0" max="1" step="0.1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Low-Pass</span><span class="val">20000</span>Hz</div>
+                    <input type="range" class="control-slider lpf-slider" min="20" max="20000" step="100" value="20000">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>High-Pass</span><span class="val">20</span>Hz</div>
+                    <input type="range" class="control-slider hpf-slider" min="20" max="10000" step="100" value="20">
+                </div>
+
+                <div class="control-group">
+                    <label style="font-size: 0.75rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" class="reverb-toggle"> Reverb
+                    </label>
+                </div>
+            `;
+            strip.querySelectorAll('.control-slider').forEach(slider => {
+                slider.oninput = (e) => { e.target.parentElement.querySelector('.val').textContent = e.target.value; };
+            });
+            container.appendChild(strip);
+            return strip;
+        }
+
+        // Helper to collect track data from a strip
+        function getTrackData(strip, url, label) {
+            return {
+                url: url,
+                label: label || strip.querySelector('.track-name').textContent,
+                volume: parseFloat(strip.querySelector('.vol-slider').value),
+                speed: parseFloat(strip.querySelector('.speed-slider').value),
+                pitch: parseFloat(strip.querySelector('.pitch-slider').value),
+                pan: parseFloat(strip.querySelector('.pan-slider').value),
+                distortion: parseFloat(strip.querySelector('.distortion-slider').value),
+                echo: parseFloat(strip.querySelector('.echo-slider').value),
+                lpf: parseFloat(strip.querySelector('.lpf-slider').value),
+                hpf: parseFloat(strip.querySelector('.hpf-slider').value),
+                reverb: strip.querySelector('.reverb-toggle').checked
+            };
+        }
+
+        // Standalone Effect Studio Upload
+        document.getElementById('upload-effects').addEventListener('click', () => {
+            const fileInput = document.getElementById('file-effects');
+            fileInput.click();
+            fileInput.onchange = async (e) => {
+                if (!e.target.files.length) return;
+                const file = e.target.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch('/upload', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    currentEditorFile = `/uploads/${data.filename}`;
+
+                    document.getElementById('effects-editor').style.display = 'block';
+                    const container = document.getElementById('editor-track');
+                    container.innerHTML = '';
+                    createTrackStrip(file.name, container);
+
+                } catch (err) { alert('Upload failed'); }
+            };
+        });
+
+        // Standalone Process Button
+        document.getElementById('btn-process-effect').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-process-effect');
+            const strip = document.querySelector('#editor-track .track-strip');
+            if (!strip) return;
+
+            const tracksData = [getTrackData(strip, currentEditorFile, "Main Track")];
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/process/mix', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stems: tracksData })
+                });
+                const data = await res.json();
+                document.getElementById('effect-result').style.display = 'block';
+                document.getElementById('effect-preview').src = data.mix_url;
+            } catch (err) { alert(err.message); }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Apply & Export';
+            }
+        });
+
+        function setupMixer(stems) {
+            const mixerContainer = document.getElementById('mixer-container');
+            const mixerTracks = document.getElementById('mixer-tracks');
+            mixerTracks.innerHTML = '';
+            mixerContainer.style.display = 'block';
+
+            Object.entries(stems).forEach(([label, url]) => {
+                createTrackStrip(label, mixerTracks);
+            });
+        }
+
+        document.getElementById('btn-render-mix').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-render-mix');
+            const mixerTracks = document.querySelectorAll('#mixer-tracks .track-strip');
+            const tracksData = [];
+
+            mixerTracks.forEach(strip => {
+                const label = strip.querySelector('.track-name').textContent;
+                tracksData.push(getTrackData(strip, currentStems[label], label));
+            });
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering...';
+
+            try {
+                const res = await fetch('/process/mix', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stems: tracksData })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Mix failed');
+
+                const resultDiv = document.getElementById('render-result');
+                const preview = document.getElementById('master-preview');
+                resultDiv.style.display = 'block';
+                preview.src = data.mix_url;
+                preview.play();
+
+            } catch (err) {
+                alert('Mix Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-export"></i> Render & Export Mix';
+            }
         });
 
     </script>
 </body>
-
-</html>

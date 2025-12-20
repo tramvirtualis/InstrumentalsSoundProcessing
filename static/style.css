@@ -11,6 +11,92 @@
     --border-color: #30363d;
 }
 
+/* Mixer UI */
+.mixer-tracks {
+    display: flex;
+    overflow-x: auto;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.track-strip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.track-strip:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.track-name {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.control-group {
+    width: 100%;
+    margin-bottom: 1.2rem;
+}
+
+.control-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.control-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    outline: none;
+}
+
+.control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+}
+
+.mixer-master {
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    color: var(--text-dim);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.3;
+}
+
 * {
     margin: 0;
     padding: 0;

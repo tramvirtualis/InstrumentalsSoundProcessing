@@ -13,7 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Import custom modules
-from src.audio_processor import isolate_rock_instruments
+from src.isolator import isolate_rock_instruments
+from src.effects import apply_audio_effects
+import uuid
 
 # Resolve NoBackendError for librosa by providing static ffmpeg
 try:
@@ -117,6 +119,35 @@ async def isolate_instruments(request: Request):
         print(f"ERROR: {error_msg}")
         traceback.print_exc()
         return JSONResponse(content={"error": f"Separation failed: {error_msg}"}, status_code=500)
+
+@app.post("/process/mix")
+async def mix_stems(request: Request):
+    data = await request.json()
+    stems = data.get("stems")
+    print(f"DEBUG: Received mix request with {len(stems) if stems else 0} tracks")
+    if not stems:
+        raise HTTPException(status_code=400, detail="Stems data is required")
+    
+    try:
+        mix_filename = f"mix_{uuid.uuid4().hex[:8]}.wav"
+        output_path = UPLOAD_DIR / mix_filename
+        print(f"DEBUG: Output path will be {output_path}")
+        
+        success = apply_audio_effects(stems, output_path)
+        
+        if success:
+            print(f"DEBUG: Mix successful: {output_path}")
+            return JSONResponse(content={
+                "message": "Mix complete",
+                "mix_url": f"/uploads/{mix_filename}"
+            })
+        else:
+            print("DEBUG: apply_audio_effects returned False")
+            return JSONResponse(content={"error": "Failed to create mix - no audio generated"}, status_code=500)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": f"Mixing failed: {str(e)}"}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn
