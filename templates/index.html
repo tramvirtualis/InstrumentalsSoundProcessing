@@ -18,27 +18,19 @@
         <ul class="menu">
             <li class="menu-item active" data-target="view-dashboard">
                 <i class="fa-solid fa-house"></i>
-                Dashboard
-            </li>
-            <li class="menu-item" data-target="view-noise">
-                <i class="fa-solid fa-sliders"></i>
-                Noise Reduction
+                Trang chủ
             </li>
             <li class="menu-item" data-target="view-isolation">
                 <i class="fa-solid fa-guitar"></i>
-                Instrument Isolation
-            </li>
-            <li class="menu-item" data-target="view-spectrogram">
-                <i class="fa-solid fa-microscope"></i>
-                Audio Analysis
+                Tách nhạc cụ
             </li>
             <li class="menu-item" data-target="view-stems">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
-                Effects Studio
+                Phòng thu hiệu ứng
             </li>
-            <li class="menu-item">
-                <i class="fa-solid fa-gear"></i>
-                Settings
+            <li class="menu-item" data-target="view-voice">
+                <i class="fa-solid fa-wave-square"></i>
+                Phân tích chuyên sâu
             </li>
         </ul>
     </div>
@@ -48,68 +40,58 @@
         <div id="session-bar" class="session-bar" style="display:none;">
             <div class="session-info">
                 <i class="fa-solid fa-file-audio"></i>
-                <span id="active-filename">No file selected</span>
+                <span id="active-filename">Chưa chọn tệp</span>
             </div>
             <button class="btn-reset" onclick="resetSession()">
-                <i class="fa-solid fa-rotate-left"></i> Reset & New File
+                <i class="fa-solid fa-rotate-left"></i> Đặt lại & Chọn tệp mới
             </button>
         </div>
 
         <!-- Dashboard View -->
         <div id="view-dashboard" class="view-section active">
             <header>
-                <h1>Welcome to RockSound</h1>
-                <p class="subtitle">Complete pro-audio processing studio</p>
+                <h1>Chào mừng đến với RockSound</h1>
+                <p class="subtitle">Phòng thu xử lý âm thanh chuyên nghiệp dành cho bạn</p>
             </header>
 
             <div id="main-upload-area" class="upload-area">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                <h3>Start here: Upload your track</h3>
-                <p>Supports MP3, WAV, FLAC</p>
+                <h3>Bắt đầu tại đây: Tải lên bản nhạc của bạn</h3>
+                <p>Hỗ trợ định dạng MP3, WAV, FLAC</p>
                 <input type="file" id="file-main" hidden accept="audio/*">
             </div>
 
             <div class="card-grid" id="dashboard-features" style="display:none;">
                 <div class="card" onclick="switchView('view-spectrogram')">
                     <div class="card-icon"><i class="fa-solid fa-microscope"></i></div>
-                    <h3>Analyze</h3>
+                    <h3>Phân tích phổ</h3>
+                    <p style="font-size:0.8rem; color:#888;">Xem chi tiết tần số</p>
                 </div>
                 <div class="card" onclick="switchView('view-isolation')">
                     <div class="card-icon"><i class="fa-solid fa-guitar"></i></div>
-                    <h3>Isolate</h3>
+                    <h3>Tách nhạc cụ</h3>
+                    <p style="font-size:0.8rem; color:#888;">Tách trống, bass, vocal...</p>
                 </div>
                 <div class="card" onclick="switchView('view-stems')">
                     <div class="card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                    <h3>Edit Effects</h3>
+                    <h3>Hiệu ứng</h3>
+                    <p style="font-size:0.8rem; color:#888;">Chỉnh sửa & Mix nhạc</p>
                 </div>
             </div>
         </div>
 
-        <!-- Audio Analysis View -->
-        <div id="view-spectrogram" class="view-section">
-            <header>
-                <h1>Audio Analysis</h1>
-                <p class="subtitle">Extract technical insights</p>
-            </header>
-            <div id="analysis-placeholder" class="empty-state">
-                <i class="fa-solid fa-microscope"></i>
-                <h3>Ready to Analyze</h3>
-                <button class="btn-primary" id="btn-run-analysis">Start Analysis</button>
-            </div>
-            <div id="result-spectrogram" class="analysis-results" style="display:none;">
-                <div class="analysis-content"></div>
-            </div>
-        </div>
+
 
         <!-- Isolation View -->
         <div id="view-isolation" class="view-section">
             <header>
-                <h1>Instrument Isolation</h1>
+                <h1>Tách các thành phần bản nhạc</h1>
+                <p class="subtitle">Sử dụng thuật toán AI để tách Guitar, Trống, Bass và Lời hát</p>
             </header>
             <div id="isolation-placeholder" class="empty-state">
                 <i class="fa-solid fa-guitar"></i>
-                <h3>Ready to Isolate Stems</h3>
-                <button class="btn-primary" id="btn-run-isolation">Separate Instruments</button>
+                <h3>Sẵn sàng tách nhạc cụ</h3>
+                <button class="btn-primary" id="btn-run-isolation">Bắt đầu tách ngay</button>
             </div>
             <div id="result-isolation" class="analysis-results" style="display:none;">
                 <div class="stems-container"></div>
@@ -119,28 +101,30 @@
         <!-- Stems Mixing View -->
         <div id="view-stems" class="view-section">
             <header>
-                <h1>Effects Studio</h1>
+                <h1>Phòng thu hiệu ứng</h1>
+                <p class="subtitle">Áp dụng hiệu ứng chuyên nghiệp cho bản thu của bạn</p>
             </header>
 
             <div id="studio-mode-selector" class="studio-toggle-container" style="display:none;">
-                <button class="toggle-btn active" id="btn-mode-stems">Isolated Stems</button>
-                <button class="toggle-btn" id="btn-mode-single">Original File</button>
+                <button class="toggle-btn active" id="btn-mode-stems">Nhạc cụ đã tách</button>
+                <button class="toggle-btn" id="btn-mode-single">Bản gốc</button>
             </div>
 
             <div id="mixer-placeholder" class="empty-state">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <h3>Effects & Mixing</h3>
-                <p>Choose your workspace mode above</p>
+                <h3>Hiệu ứng & Trộn nhạc (Mixing)</h3>
+                <p>Chọn chế độ làm việc phía trên để bắt đầu</p>
                 <div style="display:flex; gap:1rem; margin-top:1rem;">
-                    <button class="btn-primary" onclick="setStudioMode('single')">Process Original Track</button>
-                    <button class="btn-secondary" onclick="switchView('view-isolation')">Go to Isolation First</button>
+                    <button class="btn-primary" onclick="setStudioMode('single')">Xử lý bản gốc</button>
+                    <button class="btn-secondary" onclick="switchView('view-isolation')">Đi đến Tách nhạc cụ
+                        trước</button>
                 </div>
             </div>
 
             <div id="effects-editor" style="display:none;">
                 <div class="mixer-tracks" id="editor-track"></div>
                 <div class="mixer-master">
-                    <button class="btn-primary" id="btn-process-single">Apply & Export</button>
+                    <button class="btn-primary" id="btn-process-single">Áp dụng & Xuất tệp</button>
                     <div id="single-result" style="display:none; margin-top: 1rem;"><audio controls id="single-preview"
                             style="width:100%"></audio></div>
                 </div>
@@ -149,9 +133,113 @@
             <div id="mixer-container" style="display:none;">
                 <div class="mixer-tracks" id="mixer-tracks"></div>
                 <div class="mixer-master">
-                    <button class="btn-primary" id="btn-render-mix">Render Mix</button>
+                    <button class="btn-primary" id="btn-render-mix">Xuất bản Mix thành phẩm</button>
                     <div id="render-result" style="display:none; margin-top: 1rem;"><audio controls id="master-preview"
                             style="width:100%"></audio></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analysis View -->
+        <div id="view-voice" class="view-section">
+            <header>
+                <h1>Phân tích chuyên sâu</h1>
+                <p class="subtitle">Áp dụng các kỹ thuật xử lý tín hiệu âm thanh tiên tiến</p>
+            </header>
+
+            <div id="voice-placeholder" class="empty-state">
+                <i class="fa-solid fa-wave-square"></i>
+                <h3>Ready for Advanced Analysis</h3>
+                <p>Áp dụng các kỹ thuật LPC, Formant, Pitch Tracking</p>
+            </div>
+
+            <div id="voice-analysis-container" style="display:none;">
+                <!-- Analysis Buttons -->
+                <div class="voice-controls"
+                    style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-lpc-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-chart-line"></i> Phân tích LPC
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Mô phỏng nguồn âm thanh và bộ lọc cộng hưởng
+                            của nhạc cụ.</p>
+                    </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-waveform-analysis"
+                            style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-water"></i> Dạng sóng (Waveform)
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Hình ảnh trực quan về biên độ âm thanh theo
+                            thời gian.</p>
+                    </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-formant-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-mountain"></i> Bồi âm (Harmonics)
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Xác định các đỉnh tần số tạo nên màu sắc đặc
+                            trưng của âm thanh.</p>
+                    </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-pitch-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-music"></i> Theo dõi cao độ
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Dò tìm nốt nhạc và sự thay đổi tần số chính
+                            xác theo thời gian.</p>
+                    </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-detailed-spec" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-image"></i> Phổ chi tiết
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Biểu đồ FFT độ phân giải cao cho cái nhìn
+                            sâu sắc nhất.</p>
+                    </div>
+                </div>
+
+                <!-- Results Container -->
+                <div id="voice-results">
+                    <!-- LPC Results -->
+                    <div id="lpc-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-chart-line"></i> Linear Predictive Coding Analysis</h3>
+                        <div class="lpc-content"></div>
+                    </div>
+
+                    <!-- Waveform Results -->
+                    <div id="waveform-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-water"></i> Waveform Visualization</h3>
+                        <canvas id="waveform-canvas" width="800" height="300"
+                            style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
+                        <div class="waveform-info" style="margin-top:1rem;"></div>
+                    </div>
+
+                    <!-- Formant Results -->
+                    <div id="formant-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-mountain"></i> Formant Analysis</h3>
+                        <div class="formant-content"></div>
+                    </div>
+
+                    <!-- Pitch Results -->
+                    <div id="pitch-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-music"></i> Pitch Tracking</h3>
+                        <canvas id="pitch-canvas" width="800" height="300"
+                            style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
+                        <div class="pitch-info" style="margin-top:1rem;"></div>
+                    </div>
+
+                    <!-- Detailed Spectrogram Results -->
+                    <div id="detailed-spec-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-image"></i> Detailed Spectrogram (FFT-based)</h3>
+                        <div class="spec-content"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -525,6 +613,317 @@
             finally {
                 btn.disabled = false;
                 btn.textContent = "Apply & Export";
+            }
+        };
+
+        // Voice Analysis Functions
+        function updateVoiceUI() {
+            const hasFile = !!session.filename;
+            document.getElementById('voice-placeholder').style.display = hasFile ? 'none' : 'flex';
+            document.getElementById('voice-analysis-container').style.display = hasFile ? 'block' : 'none';
+        }
+
+        // Update session UI to include voice analysis
+        const originalUpdateSessionUI = updateSessionUI;
+        updateSessionUI = function () {
+            originalUpdateSessionUI();
+            updateVoiceUI();
+        };
+
+        // LPC Analysis
+        document.getElementById('btn-lpc-analysis').onclick = async () => {
+            const btn = document.getElementById('btn-lpc-analysis');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/analyze/lpc', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+
+                // Check for errors
+                if (data.error || !res.ok) {
+                    throw new Error(data.error || 'LPC analysis failed');
+                }
+
+                const container = document.getElementById('lpc-results');
+                const content = container.querySelector('.lpc-content');
+
+                content.innerHTML = `
+                    <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(33, 150, 243, 0.1)); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                        <h4 style="margin:0; color:#4CAF50;">✅ ${data.lpc_data.analysis_type === 'Musical Instrument (optimized)' ? 'Phân tích Nhạc cụ (Đã tối ưu)' : 'Hoàn tất'}</h4>
+                        <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">
+                            Tần số lấy mẫu: ${data.lpc_data.sample_rate}Hz | Khung: ${data.lpc_data.frame_length} samples | Bậc: ${data.lpc_data.order}
+                        </p>
+                    </div>
+                    <div style="display:grid; gap:2rem;">
+                        <div>
+                            <h4>Hệ số LPC (Bậc ${data.lpc_data.order})</h4>
+                            <p style="color:#999; font-size:0.85rem; margin-bottom:0.5rem;">
+                                🎸 Tối ưu cho nhạc cụ: Bậc cao giúp bắt được các bồi âm phức tạp.
+                            </p>
+                            <div style="background:#1a1a1a; padding:1rem; border-radius:8px; overflow-x:auto; max-height:300px;">
+                                <code style="color:#4CAF50; font-size:0.9rem;">
+                                    ${data.lpc_data.lpc_coefficients.map((c, i) => `a[${i}] = ${c.toFixed(6)}`).join('<br>')}
+                                </code>
+                            </div>
+                        </div>
+                        <div>
+                            <h4>Hệ số Cepstral</h4>
+                            <p style="color:#999; font-size:0.85rem; margin-bottom:0.5rem;">
+                                🎵 Đặc tính âm sắc - dùng để nhận dạng loại nhạc cụ.
+                            </p>
+                            <div style="background:#1a1a1a; padding:1rem; border-radius:8px; overflow-x:auto; max-height:300px;">
+                                <code style="color:#2196F3; font-size:0.9rem;">
+                                    ${data.lpc_data.cepstral_coefficients.slice(0, 20).map((c, i) => `c[${i}] = ${c.toFixed(6)}`).join('<br>')}
+                                </code>
+                            </div>
+                        </div>
+                        <div>
+                            <h4>Biểu đồ Tự tương quan (Autocorrelation)</h4>
+                            <img src="${data.autocorrelation_plot}" class="analysis-img" style="width:100%; border-radius:8px;">
+                        </div>
+                    </div>
+                `;
+
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                alert('LPC Analysis Error: ' + err.message);
+                console.error('LPC Error:', err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-chart-line"></i> LPC Analysis';
+            }
+        };
+
+        // Waveform Analysis
+        document.getElementById('btn-waveform-analysis').onclick = async () => {
+            const btn = document.getElementById('btn-waveform-analysis');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/analyze/waveform', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+
+                // Draw waveform on canvas
+                const canvas = document.getElementById('waveform-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Background
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Center line
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+
+                // Draw waveform
+                ctx.strokeStyle = '#FF9800';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                const points = data.waveform.points;
+                const scaleX = canvas.width / 600;
+                const scaleY = canvas.height / 300;
+
+                points.forEach((point, i) => {
+                    const x = point.x * scaleX;
+                    const y = canvas.height / 2 - point.y * scaleY;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    const y = displayCanvas.height / 2 - point.y * scaleY;
+                    if (i === 0) displayCtx.moveTo(x, y);
+                    else displayCtx.lineTo(x, y);
+                });
+                displayCtx.stroke();
+
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                alert('Waveform Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-water"></i> Waveform';
+            }
+        };
+
+        // Formant Analysis
+        document.getElementById('btn-formant-analysis').onclick = async () => {
+            const btn = document.getElementById('btn-formant-analysis');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/analyze/formants', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+
+                const container = document.getElementById('formant-results');
+                const content = container.querySelector('.formant-content');
+
+                content.innerHTML = `
+                    <div style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1)); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                        <h4 style="margin:0; color:#FF9800;">🎵 Phân tích Bồi âm (Tối ưu Nhạc cụ)</h4>
+                        <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">
+                            Phát hiện ${data.formants.length} đỉnh phổ. Đối với nhạc cụ, đây là bồi âm (harmonics).
+                        </p>
+                    </div>
+                    <div style="display:grid; gap:1rem;">
+                        ${data.formants.map((f, i) => {
+                    const isHarmonic = f.type === 'harmonic';
+                    return `
+                            <div class="stat-card" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a);">
+                                <span class="label">${isHarmonic ? '🎸 Bồi âm' : 'Đỉnh'} ${i + 1}</span>
+                                <span class="value">${f.frequency.toFixed(2)} Hz</span>
+                                <span style="color:#999; font-size:0.9rem;">Cường độ: ${f.magnitude.toFixed(2)}</span>
+                            </div>
+                        `}).join('')}
+                    </div>
+                    <div style="margin-top:1.5rem; padding:1rem; background:rgba(33, 150, 243, 0.1); border-radius:8px;">
+                        <p style="margin:0; color:#999; font-size:0.85rem;">
+                            💡 <strong>Ghi chú:</strong> Nhạc cụ có 8 bồi âm (so với 4 formant ở tiếng nói). 
+                            Kích thước FFT: 4096 cho độ phân giải tần số tốt hơn.
+                        </p>
+                    </div>
+                `;
+
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                alert('Formant Analysis Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-mountain"></i> Formants';
+            }
+        };
+
+        // Pitch Tracking
+        document.getElementById('btn-pitch-analysis').onclick = async () => {
+            const btn = document.getElementById('btn-pitch-analysis');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/analyze/pitch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+
+                const container = document.getElementById('pitch-results');
+                const content = container.querySelector('.pitch-content'); // Assuming a .pitch-content element exists within #pitch-results
+
+                // Set the HTML content, including the canvas element
+                content.innerHTML = `
+                    <div class="pitch-meta" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                        <div class="stat-card"><span class="label">Điểm dữ liệu</span><span class="value">${data.pitch_data.length}</span></div>
+                        ${data.pitch_data.length > 0 ? `
+                            <div class="stat-card"><span class="label">Nốt đầu tiên</span><span class="value">${data.pitch_data[0].note}</span></div>
+                            <div class="stat-card"><span class="label">Tần số đầu tiên</span><span class="value">${data.pitch_data[0].frequency.toFixed(2)}Hz</span></div>
+                        ` : ''}
+                    </div>
+                    <canvas id="pitch-canvas-display" width="600" height="300" style="width:100%; height:300px; background:#0a0a0a; border-radius:8px;"></canvas>
+                `;
+
+                // Now get the newly created canvas and draw on it
+                const displayCanvas = document.getElementById('pitch-canvas-display');
+                const displayCtx = displayCanvas.getContext('2d');
+
+                // Background
+                displayCtx.fillStyle = '#0a0a0a';
+                displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height);
+
+                if (data.pitch_data && data.pitch_data.length > 0) {
+                    // Find min/max frequency
+                    const freqs = data.pitch_data.map(p => p.frequency);
+                    const minFreq = Math.min(...freqs);
+                    const maxFreq = Math.max(...freqs);
+                    const freqRange = maxFreq - minFreq;
+
+                    // Draw pitch curve
+                    displayCtx.strokeStyle = '#4CAF50';
+                    displayCtx.lineWidth = 3;
+                    displayCtx.beginPath();
+
+                    data.pitch_data.forEach((point, i) => {
+                        const x = (i / data.pitch_data.length) * displayCanvas.width;
+                        const y = displayCanvas.height - ((point.frequency - minFreq) / freqRange) * (displayCanvas.height - 40) - 20;
+                        if (i === 0) displayCtx.moveTo(x, y);
+                        else displayCtx.lineTo(x, y);
+                    });
+                    displayCtx.stroke();
+
+                    // Draw points
+                    displayCtx.fillStyle = '#4CAF50';
+                    data.pitch_data.forEach((point, i) => {
+                        const x = (i / data.pitch_data.length) * displayCanvas.width;
+                        const y = displayCanvas.height - ((point.frequency - minFreq) / freqRange) * (displayCanvas.height - 40) - 20;
+                        displayCtx.beginPath();
+                        displayCtx.arc(x, y, 3, 0, Math.PI * 2);
+                        displayCtx.fill();
+                    });
+                }
+
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                alert('Pitch Tracking Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-music"></i> Pitch Tracking';
+            }
+        };
+
+        // Detailed Spectrogram
+        document.getElementById('btn-detailed-spec').onclick = async () => {
+            const btn = document.getElementById('btn-detailed-spec');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/analyze/detailed_spectrogram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: session.filename })
+                });
+                const data = await res.json();
+
+                const container = document.getElementById('detailed-spec-results');
+                const content = container.querySelector('.spec-content');
+
+                content.innerHTML = `
+                    <h4 style="margin-bottom:1rem; color:#03A9F4;">🖼️ Biểu đồ Phổ chi tiết (FFT 512)</h4>
+                    <img src="${data.spectrogram_url}" class="analysis-img" style="width:100%; border-radius:8px;">
+                    <p style="margin-top:1rem; color:#888; font-size:0.85rem;">
+                        Biểu đồ này hiển thị cường độ âm thanh qua các khung thời gian và dải tần số bin.
+                    </p>
+                `;
+
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                alert('Detailed Spectrogram Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-image"></i> Detailed Spectrogram';
             }
         };
 

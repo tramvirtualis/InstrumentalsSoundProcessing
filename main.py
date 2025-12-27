@@ -16,6 +16,7 @@ import numpy as np
 from src.isolator import isolate_rock_instruments
 from src.effects import apply_audio_effects
 from src.analyzer import analyze_audio_features
+from src.voice_processing import InstrumentVoiceProcessor
 import uuid
 
 # Resolve NoBackendError for librosa by providing static ffmpeg
@@ -131,9 +132,133 @@ async def mix_stems(request: Request):
             print("DEBUG: apply_audio_effects returned False")
             return JSONResponse(content={"error": "Failed to create mix - no audio generated"}, status_code=500)
     except Exception as e:
+        return JSONResponse(content={"error": f"Mixing failed: {str(e)}"}, status_code=500)
+
+# Voice Processing Endpoints
+@app.post("/analyze/lpc")
+async def analyze_lpc(request: Request):
+    """Phân tích Linear Predictive Coding cho nhạc cụ"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        lpc_results = processor.lpc_analysis(file_path)
+        
+        # Tạo autocorrelation plot
+        autocorr_img = processor.generate_autocorrelation_plot(file_path, SPECTROGRAM_DIR)
+        
+        return JSONResponse(content={
+            "message": "LPC analysis complete",
+            "lpc_data": lpc_results,
+            "autocorrelation_plot": f"/static/spectrograms/{autocorr_img}"
+        })
+    except Exception as e:
         import traceback
         traceback.print_exc()
-        return JSONResponse(content={"error": f"Mixing failed: {str(e)}"}, status_code=500)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/analyze/waveform")
+async def analyze_waveform(request: Request):
+    """Tạo dữ liệu waveform chi tiết"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        waveform_data = processor.generate_waveform_data(file_path)
+        return JSONResponse(content={
+            "message": "Waveform data generated",
+            "waveform": waveform_data
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/analyze/detailed_spectrogram")
+async def analyze_detailed_spectrogram(request: Request):
+    """Tạo spectrogram chi tiết với FFT"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        spec_img = processor.generate_detailed_spectrogram(file_path, SPECTROGRAM_DIR)
+        return JSONResponse(content={
+            "message": "Detailed spectrogram generated",
+            "spectrogram_url": f"/static/spectrograms/{spec_img}"
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/analyze/formants")
+async def analyze_formants(request: Request):
+    """Phân tích formants (đỉnh phổ) của nhạc cụ"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        formants = processor.analyze_formants(file_path)
+        return JSONResponse(content={
+            "message": "Formant analysis complete",
+            "formants": formants
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/analyze/pitch")
+async def analyze_pitch(request: Request):
+    """Theo dõi pitch (cao độ) theo thời gian"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        pitch_data = processor.pitch_tracking(file_path)
+        return JSONResponse(content={
+            "message": "Pitch tracking complete",
+            "pitch_data": pitch_data
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn

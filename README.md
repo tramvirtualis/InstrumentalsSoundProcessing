@@ -13,6 +13,12 @@ Một ứng dụng web xử lý âm thanh chuyên dụng cho nhạc Rock/Instrum
     *   **Acoustic Guitar**: Tách phần gõ/transients nhẹ trong dải mid.
     *   **Electric Guitar**: Lọc dải tần số đặc trưng (200Hz - 4kHz).
     *   **Piano/Keys**: Phần dư còn lại của dải tần.
+*   **Advanced Voice Analysis**: Áp dụng kỹ thuật xử lý tiếng nói cho nhạc cụ:
+    *   **LPC Analysis**: Phân tích Linear Predictive Coding với autocorrelation
+    *   **Waveform Visualization**: Hiển thị dạng sóng chi tiết trên canvas
+    *   **Formant Analysis**: Phân tích các đỉnh phổ đặc trưng của nhạc cụ
+    *   **Pitch Tracking**: Theo dõi cao độ theo thời gian với pYIN algorithm
+    *   **Detailed Spectrogram**: Spectrogram FFT-based với Hamming window
 
 ## Cài đặt và Chạy
 
@@ -53,6 +59,13 @@ Truy cập trình duyệt tại địa chỉ: `http://127.0.0.1:8000`
 
 ## Cấu trúc thư mục
 *   `main.py`: Mã nguồn chính (Server FastAPI & Logic xử lý âm thanh).
+*   `src/`: Chứa các module xử lý:
+    *   `analyzer.py`: Phân tích âm thanh cơ bản
+    *   `isolator.py`: Tách nhạc cụ
+    *   `effects.py`: Áp dụng hiệu ứng
+    *   `voice_processing.py`: **MỚI** - Xử lý âm thanh với kỹ thuật tiếng nói
 *   `templates/`: Chứa file giao diện HTML.
 *   `static/`: Chứa CSS và ảnh Spectrogram sinh ra.
 *   `uploads/`: Nơi lưu file nhạc upload và các file đã tách (Cần tạo thư mục này nếu chưa có, code sẽ tự tạo).
+*   `Xử lý tiếng nói/`: Code tham khảo về xử lý tiếng nói
+*   `VOICE_ANALYSIS.md`: **MỚI** - Tài liệu chi tiết về tính năng Voice Analysis

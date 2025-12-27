@@ -6,3 +6,5 @@ librosa
 matplotlib
 numpy
 scipy
+soundfile
+static-ffmpeg
