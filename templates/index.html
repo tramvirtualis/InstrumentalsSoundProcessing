@@ -62,10 +62,10 @@
             </div>
 
             <div class="card-grid" id="dashboard-features" style="display:none;">
-                <div class="card" onclick="switchView('view-spectrogram')">
+                <div class="card" onclick="switchView('view-voice')">
                     <div class="card-icon"><i class="fa-solid fa-microscope"></i></div>
-                    <h3>Phân tích phổ</h3>
-                    <p style="font-size:0.8rem; color:#888;">Xem chi tiết tần số</p>
+                    <h3>Phân tích chuyên sâu</h3>
+                    <p style="font-size:0.8rem; color:#888;">Xem chi tiết tần số & bồi âm</p>
                 </div>
                 <div class="card" onclick="switchView('view-isolation')">
                     <div class="card-icon"><i class="fa-solid fa-guitar"></i></div>
@@ -309,55 +309,68 @@
 
         function updateSessionUI() {
             const hasFile = !!session.filename;
-            document.getElementById('session-bar').style.display = hasFile ? 'flex' : 'none';
-            document.getElementById('active-filename').textContent = session.filename || "No file selected";
+            console.log("Updating UI. File:", session.filename, "Stems:", !!session.stems);
 
-            // Dashboard UI
-            document.getElementById('main-upload-area').style.display = hasFile ? 'none' : 'flex';
-            document.getElementById('dashboard-features').style.display = hasFile ? 'grid' : 'none';
+            // Session Bar
+            const elSessionBar = document.getElementById('session-bar');
+            if (elSessionBar) elSessionBar.style.display = hasFile ? 'flex' : 'none';
+            const elActiveFile = document.getElementById('active-filename');
+            if (elActiveFile) elActiveFile.textContent = session.filename || "Chưa chọn tệp";
 
-            // Feature view placeholders (simple version)
-            document.getElementById('analysis-placeholder').style.display = (hasFile && !session.analysis) ? 'flex' : 'none';
-            document.getElementById('result-spectrogram').style.display = session.analysis ? 'block' : 'none';
-            if (session.analysis) renderAnalysis(session.analysis);
+            // Dashboard
+            const elUpload = document.getElementById('main-upload-area');
+            const elFeatures = document.getElementById('dashboard-features');
+            if (elUpload) elUpload.style.display = hasFile ? 'none' : 'flex';
+            if (elFeatures) elFeatures.style.display = hasFile ? 'grid' : 'none';
 
-            document.getElementById('isolation-placeholder').style.display = (hasFile && !session.stems) ? 'flex' : 'none';
-            document.getElementById('result-isolation').style.display = session.stems ? 'block' : 'none';
-            if (session.stems) renderStems(session.stems);
+            // Isolation
+            const elIsoPH = document.getElementById('isolation-placeholder');
+            const elIsoRes = document.getElementById('result-isolation');
+            if (elIsoPH) elIsoPH.style.display = (hasFile && !session.stems) ? 'flex' : 'none';
+            if (elIsoRes) elIsoRes.style.display = session.stems ? 'block' : 'none';
 
-            // Studio UI
-            const modeSelector = document.getElementById('studio-mode-selector');
-            modeSelector.style.display = hasFile ? 'flex' : 'none';
+            // Advanced Analysis
+            const elVoicePH = document.getElementById('voice-placeholder');
+            const elVoiceCont = document.getElementById('voice-analysis-container');
+            if (elVoicePH) elVoicePH.style.display = hasFile ? 'none' : 'flex';
+            if (elVoiceCont) elVoiceCont.style.display = hasFile ? 'block' : 'none';
 
-            const hasStems = !!session.stems;
+            // Studio
+            const elStudioModeSec = document.getElementById('studio-mode-selector');
+            if (elStudioModeSec) elStudioModeSec.style.display = hasFile ? 'flex' : 'none';
+
             const mode = session.studioMode;
+            const btnStems = document.getElementById('btn-mode-stems');
+            const btnSingle = document.getElementById('btn-mode-single');
+            if (btnStems) btnStems.classList.toggle('active', mode === 'stems');
+            if (btnSingle) btnSingle.classList.toggle('active', mode === 'single');
 
-            // Toggle Buttons
-            document.getElementById('btn-mode-stems').classList.toggle('active', mode === 'stems');
-            document.getElementById('btn-mode-single').classList.toggle('active', mode === 'single');
-
-            // Workspace visibility
             const pleader = document.getElementById('mixer-placeholder');
             const meditor = document.getElementById('effects-editor');
             const mcontainer = document.getElementById('mixer-container');
 
-            pleader.style.display = 'none';
-            meditor.style.display = 'none';
-            mcontainer.style.display = 'none';
+            if (pleader) pleader.style.display = 'none';
+            if (meditor) meditor.style.display = 'none';
+            if (mcontainer) mcontainer.style.display = 'none';
 
             if (mode === 'stems') {
-                if (hasStems) {
-                    mcontainer.style.display = 'block';
+                if (session.stems) {
+                    if (mcontainer) mcontainer.style.display = 'block';
                     setupMixer(session.stems);
                 } else {
-                    pleader.style.display = 'flex';
-                    pleader.querySelector('p').textContent = "Please isolate instruments first to use multi-track mixer.";
+                    if (pleader) {
+                        pleader.style.display = 'flex';
+                        const p = pleader.querySelector('p');
+                        if (p) p.textContent = "Vui lòng tách nhạc cụ trước khi sử dụng bộ trộn đa kênh.";
+                    }
                 }
-            } else { // mode === 'single'
-                meditor.style.display = 'block';
-                const container = document.getElementById('editor-track');
-                if (container.children.length === 0) {
-                    createTrackStrip("Original Track", container);
+            } else {
+                if (meditor) {
+                    meditor.style.display = 'block';
+                    const container = document.getElementById('editor-track');
+                    if (container && container.children.length === 0) {
+                        createTrackStrip("Bản gốc", container);
+                    }
                 }
             }
         }
@@ -367,112 +380,90 @@
             updateSessionUI();
         }
 
-        document.getElementById('btn-mode-stems').onclick = () => setStudioMode('stems');
-        document.getElementById('btn-mode-single').onclick = () => setStudioMode('single');
+        const btnModeStems = document.getElementById('btn-mode-stems');
+        if (btnModeStems) btnModeStems.onclick = () => setStudioMode('stems');
+        const btnModeSingle = document.getElementById('btn-mode-single');
+        if (btnModeSingle) btnModeSingle.onclick = () => setStudioMode('single');
 
         function resetSession() {
             session = { filename: "", analysis: null, stems: null };
-            document.getElementById('file-main').value = '';
-            // Reset Dashboard icons
-            mainUploadArea.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><h3>Start here: Upload your track</h3><p>Supports MP3, WAV, FLAC</p>`;
+            const fileInput = document.getElementById('file-main');
+            if (fileInput) fileInput.value = '';
 
-            // Clear result containers
-            document.getElementById('result-spectrogram').querySelector('.analysis-content').innerHTML = '';
-            document.getElementById('result-isolation').querySelector('.stems-container').innerHTML = '';
-            document.getElementById('mixer-tracks').innerHTML = '';
-            document.getElementById('editor-track').innerHTML = '';
+            const uploadArea = document.getElementById('main-upload-area');
+            if (uploadArea) {
+                uploadArea.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><h3>Tải lên bản nhạc của bạn</h3><p>Hỗ trợ MP3, WAV, FLAC</p>`;
+            }
+
+            // Clear results
+            const isoResult = document.getElementById('result-isolation');
+            if (isoResult) {
+                const container = isoResult.querySelector('.stems-container');
+                if (container) container.innerHTML = '';
+            }
+
+            const mixerTracks = document.getElementById('mixer-tracks');
+            const editorTrack = document.getElementById('editor-track');
+            if (mixerTracks) mixerTracks.innerHTML = '';
+            if (editorTrack) editorTrack.innerHTML = '';
 
             updateSessionUI();
             switchView('view-dashboard');
         }
 
-        // Feature Actions
-        document.getElementById('btn-run-analysis').onclick = async () => {
-            const btn = document.getElementById('btn-run-analysis');
-            const resContainer = document.getElementById('result-spectrogram');
-            const status = resContainer.querySelector('.status-text');
+        // --- Core Actions ---
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-            resContainer.style.display = 'block';
+        const btnIsolation = document.getElementById('btn-run-isolation');
+        if (btnIsolation) {
+            btnIsolation.onclick = async () => {
+                const btn = btnIsolation;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
-            try {
-                const res = await fetch('/analyze/spectrogram', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
-                session.analysis = data;
-                renderAnalysis(data);
-                updateSessionUI();
-            } catch (err) {
-                status.textContent = "Error: " + err.message;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Start Analysis";
-            }
-        };
+                try {
+                    const res = await fetch('/analyze/isolation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
 
-        document.getElementById('btn-run-isolation').onclick = async () => {
-            const btn = document.getElementById('btn-run-isolation');
-            const resContainer = document.getElementById('result-isolation');
-            const status = resContainer.querySelector('.status-text');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-            resContainer.style.display = 'block';
-
-            try {
-                const res = await fetch('/analyze/isolation', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
-                session.stems = data.stems;
-                renderStems(data.stems);
-                updateSessionUI();
-            } catch (err) {
-                status.textContent = "Error: " + err.message;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Separate Instruments";
-            }
-        };
-
-        function renderAnalysis(data) {
-            const container = document.getElementById('result-spectrogram').querySelector('.analysis-content');
-            container.innerHTML = `
-                <div class="analysis-grid">
-                    <div class="stat-card"><span class="label">BPM</span><span class="value">${data.bpm}</span></div>
-                    <div class="stat-card"><span class="label">Key</span><span class="value">${data.key}</span></div>
-                    <div class="stat-card"><span class="label">Duration</span><span class="value">${data.duration}s</span></div>
-                    <div class="stat-card"><span class="label">Sample Rate</span><span class="value">${data.sample_rate}Hz</span></div>
-                </div>
-                <div><h3>Spectrogram</h3><img src="${data.spectrogram_url}" class="analysis-img"></div>
-                <div style="margin-top:2rem"><h3>Waveform</h3><img src="${data.waveform_url}" class="analysis-img"></div>
-            `;
+                    session.stems = data.stems;
+                    renderStems(data.stems);
+                    updateSessionUI();
+                } catch (err) {
+                    alert("Lỗi tách nhạc: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Tách ngay";
+                }
+            };
         }
 
         function renderStems(stems) {
-            const container = document.getElementById('result-isolation').querySelector('.stems-container');
+            const elResults = document.getElementById('result-isolation');
+            if (!elResults) return;
+            const container = elResults.querySelector('.stems-container');
+            if (!container) return;
             container.innerHTML = '';
             Object.entries(stems).forEach(([label, url]) => {
                 const row = document.createElement('div');
                 row.className = 'stem-player';
-                row.innerHTML = `<div class="stem-name">${label}</div><audio controls src="${url}"></audio>`;
+                row.style = "background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;";
+                row.innerHTML = `<div class="stem-name" style="min-width: 100px; font-weight: bold;">${label.toUpperCase()}</div><audio controls src="${url}" style="flex: 1;"></audio>`;
                 container.appendChild(row);
             });
         }
 
-        // Mixer Logic
+        // --- Mixer Logic ---
+
         function setupMixer(stems) {
             const container = document.getElementById('mixer-tracks');
+            if (!container) return;
             const existingStems = Array.from(container.querySelectorAll('.track-strip')).map(s => s.dataset.label);
             const newStems = Object.keys(stems);
 
-            // Only rebuild if the labels changed
             if (JSON.stringify(existingStems) === JSON.stringify(newStems)) return;
 
             container.innerHTML = '';
@@ -486,59 +477,28 @@
             strip.className = 'track-strip';
             strip.dataset.label = label;
             strip.innerHTML = `
-                <div class="track-name">${label}</div>
-                
-                <div class="control-group">
-                    <div class="control-label"><span>Vol</span> <span class="val">1.0</span></div>
-                    <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Speed</span> <span class="val">1.0</span>x</div>
-                    <input type="range" class="control-slider speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Pitch</span> <span class="val">0</span> st</div>
-                    <input type="range" class="control-slider pitch-slider" min="-12" max="12" step="1" value="0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Distort</span> <span class="val">0</span>%</div>
-                    <input type="range" class="control-slider dist-slider" min="0" max="1" step="0.1" value="0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Echo</span> <span class="val">0</span>%</div>
-                    <input type="range" class="control-slider echo-slider" min="0" max="1" step="0.1" value="0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>LPF</span> <span class="val">20k</span>Hz</div>
-                    <input type="range" class="control-slider lpf-slider" min="100" max="20000" step="100" value="20000">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>HPF</span> <span class="val">20</span>Hz</div>
-                    <input type="range" class="control-slider hpf-slider" min="20" max="5000" step="50" value="20">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Reverb</span> <span class="val">0</span></div>
-                    <input type="range" class="control-slider reverb-slider" min="0" max="1" step="0.1" value="0">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label"><span>Pan</span> <span class="val">0</span></div>
-                    <input type="range" class="control-slider pan-slider" min="-1" max="1" step="0.1" value="0">
+                <div class="track-name" style="font-weight: bold; margin-bottom: 1rem; color: #4CAF50;">${label.toUpperCase()}</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                    <div class="control-group">
+                        <div class="control-label"><span>Âm lượng</span> <span class="val">1.0</span></div>
+                        <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Tốc độ</span> <span class="val">1.0</span>x</div>
+                        <input type="range" class="control-slider speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Cao độ</span> <span class="val">0</span> st</div>
+                        <input type="range" class="control-slider pitch-slider" min="-12" max="12" step="1" value="0">
+                    </div>
                 </div>
             `;
 
             strip.querySelectorAll('input').forEach(input => {
                 input.oninput = (e) => {
                     let val = e.target.value;
-                    if (val >= 1000) val = (val / 1000).toFixed(1) + 'k';
-                    e.target.previousElementSibling.querySelector('.val').textContent = val;
+                    const valEl = e.target.previousElementSibling.querySelector('.val');
+                    if (valEl) valEl.textContent = val;
                 };
             });
 
@@ -548,384 +508,288 @@
         function getTrackData(strip, url) {
             return {
                 url: url,
-                volume: parseFloat(strip.querySelector('.vol-slider').value),
-                speed: parseFloat(strip.querySelector('.speed-slider').value),
-                pitch: parseFloat(strip.querySelector('.pitch-slider').value),
-                distortion: parseFloat(strip.querySelector('.dist-slider').value),
-                echo: parseFloat(strip.querySelector('.echo-slider').value),
-                lpf: parseFloat(strip.querySelector('.lpf-slider').value),
-                hpf: parseFloat(strip.querySelector('.hpf-slider').value),
-                reverb: parseFloat(strip.querySelector('.reverb-slider').value),
-                pan: parseFloat(strip.querySelector('.pan-slider').value)
+                volume: parseFloat(strip.querySelector('.vol-slider')?.value || 1.0),
+                speed: parseFloat(strip.querySelector('.speed-slider')?.value || 1.0),
+                pitch: parseFloat(strip.querySelector('.pitch-slider')?.value || 0),
+                distortion: 0, echo: 0, lpf: 20000, hpf: 20, reverb: 0, pan: 0
             };
         }
 
-        document.getElementById('btn-render-mix').onclick = async () => {
-            const btn = document.getElementById('btn-render-mix');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        const btnRenderMix = document.getElementById('btn-render-mix');
+        if (btnRenderMix) {
+            btnRenderMix.onclick = async () => {
+                const btn = btnRenderMix;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kết xuất...';
 
-            const tracks = [];
-            document.querySelectorAll('#mixer-tracks .track-strip').forEach(strip => {
-                const label = strip.dataset.label;
-                tracks.push(getTrackData(strip, session.stems[label]));
-            });
-
-            try {
-                const res = await fetch('/process/mix', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tracks })
+                const tracks = [];
+                document.querySelectorAll('#mixer-tracks .track-strip').forEach(strip => {
+                    const label = strip.dataset.label;
+                    tracks.push(getTrackData(strip, session.stems[label]));
                 });
-                const data = await res.json();
-                const preview = document.getElementById('master-preview');
-                preview.src = data.mix_url;
-                document.getElementById('render-result').style.display = 'block';
-                preview.play();
-            } catch (err) { alert(err.message); }
-            finally {
-                btn.disabled = false;
-                btn.textContent = "Render Mix";
-            }
-        };
 
-
-        document.getElementById('btn-process-single').onclick = async () => {
-            const btn = document.getElementById('btn-process-single');
-            btn.disabled = true;
-            btn.textContent = "Processing...";
-
-            const strip = document.getElementById('editor-track').querySelector('.track-strip');
-            const track = getTrackData(strip, "/uploads/" + session.filename);
-
-            try {
-                const res = await fetch('/process/mix', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tracks: [track] })
-                });
-                const data = await res.json();
-                const preview = document.getElementById('single-preview');
-                preview.src = data.mix_url;
-                document.getElementById('single-result').style.display = 'block';
-                preview.play();
-            } catch (err) { alert(err.message); }
-            finally {
-                btn.disabled = false;
-                btn.textContent = "Apply & Export";
-            }
-        };
-
-        // Voice Analysis Functions
-        function updateVoiceUI() {
-            const hasFile = !!session.filename;
-            document.getElementById('voice-placeholder').style.display = hasFile ? 'none' : 'flex';
-            document.getElementById('voice-analysis-container').style.display = hasFile ? 'block' : 'none';
+                try {
+                    const res = await fetch('/process/mix', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tracks })
+                    });
+                    const data = await res.json();
+                    const preview = document.getElementById('master-preview');
+                    if (preview) {
+                        preview.src = data.mix_url;
+                        const resDiv = document.getElementById('render-result');
+                        if (resDiv) resDiv.style.display = 'block';
+                        preview.play();
+                    }
+                } catch (err) { alert(err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.textContent = "Xuất bản Mix thành phẩm";
+                }
+            };
         }
 
-        // Update session UI to include voice analysis
-        const originalUpdateSessionUI = updateSessionUI;
-        updateSessionUI = function () {
-            originalUpdateSessionUI();
-            updateVoiceUI();
-        };
+        const btnProcessSingle = document.getElementById('btn-process-single');
+        if (btnProcessSingle) {
+            btnProcessSingle.onclick = async () => {
+                const btn = btnProcessSingle;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
-        // LPC Analysis
-        document.getElementById('btn-lpc-analysis').onclick = async () => {
-            const btn = document.getElementById('btn-lpc-analysis');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                const stripCont = document.getElementById('editor-track');
+                const strip = stripCont ? stripCont.querySelector('.track-strip') : null;
+                if (!strip) return;
 
-            try {
-                const res = await fetch('/analyze/lpc', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
+                const track = getTrackData(strip, "/uploads/" + session.filename);
 
-                // Check for errors
-                if (data.error || !res.ok) {
-                    throw new Error(data.error || 'LPC analysis failed');
-                }
-
-                const container = document.getElementById('lpc-results');
-                const content = container.querySelector('.lpc-content');
-
-                content.innerHTML = `
-                    <div style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(33, 150, 243, 0.1)); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
-                        <h4 style="margin:0; color:#4CAF50;">✅ ${data.lpc_data.analysis_type === 'Musical Instrument (optimized)' ? 'Phân tích Nhạc cụ (Đã tối ưu)' : 'Hoàn tất'}</h4>
-                        <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">
-                            Tần số lấy mẫu: ${data.lpc_data.sample_rate}Hz | Khung: ${data.lpc_data.frame_length} samples | Bậc: ${data.lpc_data.order}
-                        </p>
-                    </div>
-                    <div style="display:grid; gap:2rem;">
-                        <div>
-                            <h4>Hệ số LPC (Bậc ${data.lpc_data.order})</h4>
-                            <p style="color:#999; font-size:0.85rem; margin-bottom:0.5rem;">
-                                🎸 Tối ưu cho nhạc cụ: Bậc cao giúp bắt được các bồi âm phức tạp.
-                            </p>
-                            <div style="background:#1a1a1a; padding:1rem; border-radius:8px; overflow-x:auto; max-height:300px;">
-                                <code style="color:#4CAF50; font-size:0.9rem;">
-                                    ${data.lpc_data.lpc_coefficients.map((c, i) => `a[${i}] = ${c.toFixed(6)}`).join('<br>')}
-                                </code>
-                            </div>
-                        </div>
-                        <div>
-                            <h4>Hệ số Cepstral</h4>
-                            <p style="color:#999; font-size:0.85rem; margin-bottom:0.5rem;">
-                                🎵 Đặc tính âm sắc - dùng để nhận dạng loại nhạc cụ.
-                            </p>
-                            <div style="background:#1a1a1a; padding:1rem; border-radius:8px; overflow-x:auto; max-height:300px;">
-                                <code style="color:#2196F3; font-size:0.9rem;">
-                                    ${data.lpc_data.cepstral_coefficients.slice(0, 20).map((c, i) => `c[${i}] = ${c.toFixed(6)}`).join('<br>')}
-                                </code>
-                            </div>
-                        </div>
-                        <div>
-                            <h4>Biểu đồ Tự tương quan (Autocorrelation)</h4>
-                            <img src="${data.autocorrelation_plot}" class="analysis-img" style="width:100%; border-radius:8px;">
-                        </div>
-                    </div>
-                `;
-
-                container.style.display = 'block';
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (err) {
-                alert('LPC Analysis Error: ' + err.message);
-                console.error('LPC Error:', err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-chart-line"></i> LPC Analysis';
-            }
-        };
-
-        // Waveform Analysis
-        document.getElementById('btn-waveform-analysis').onclick = async () => {
-            const btn = document.getElementById('btn-waveform-analysis');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-
-            try {
-                const res = await fetch('/analyze/waveform', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
-
-                // Draw waveform on canvas
-                const canvas = document.getElementById('waveform-canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Background
-                ctx.fillStyle = '#0a0a0a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Center line
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height / 2);
-                ctx.lineTo(canvas.width, canvas.height / 2);
-                ctx.stroke();
-
-                // Draw waveform
-                ctx.strokeStyle = '#FF9800';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-
-                const points = data.waveform.points;
-                const scaleX = canvas.width / 600;
-                const scaleY = canvas.height / 300;
-
-                points.forEach((point, i) => {
-                    const x = point.x * scaleX;
-                    const y = canvas.height / 2 - point.y * scaleY;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                    const y = displayCanvas.height / 2 - point.y * scaleY;
-                    if (i === 0) displayCtx.moveTo(x, y);
-                    else displayCtx.lineTo(x, y);
-                });
-                displayCtx.stroke();
-
-                container.style.display = 'block';
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (err) {
-                alert('Waveform Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-water"></i> Waveform';
-            }
-        };
-
-        // Formant Analysis
-        document.getElementById('btn-formant-analysis').onclick = async () => {
-            const btn = document.getElementById('btn-formant-analysis');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-
-            try {
-                const res = await fetch('/analyze/formants', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
-
-                const container = document.getElementById('formant-results');
-                const content = container.querySelector('.formant-content');
-
-                content.innerHTML = `
-                    <div style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1)); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
-                        <h4 style="margin:0; color:#FF9800;">🎵 Phân tích Bồi âm (Tối ưu Nhạc cụ)</h4>
-                        <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">
-                            Phát hiện ${data.formants.length} đỉnh phổ. Đối với nhạc cụ, đây là bồi âm (harmonics).
-                        </p>
-                    </div>
-                    <div style="display:grid; gap:1rem;">
-                        ${data.formants.map((f, i) => {
-                    const isHarmonic = f.type === 'harmonic';
-                    return `
-                            <div class="stat-card" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a);">
-                                <span class="label">${isHarmonic ? '🎸 Bồi âm' : 'Đỉnh'} ${i + 1}</span>
-                                <span class="value">${f.frequency.toFixed(2)} Hz</span>
-                                <span style="color:#999; font-size:0.9rem;">Cường độ: ${f.magnitude.toFixed(2)}</span>
-                            </div>
-                        `}).join('')}
-                    </div>
-                    <div style="margin-top:1.5rem; padding:1rem; background:rgba(33, 150, 243, 0.1); border-radius:8px;">
-                        <p style="margin:0; color:#999; font-size:0.85rem;">
-                            💡 <strong>Ghi chú:</strong> Nhạc cụ có 8 bồi âm (so với 4 formant ở tiếng nói). 
-                            Kích thước FFT: 4096 cho độ phân giải tần số tốt hơn.
-                        </p>
-                    </div>
-                `;
-
-                container.style.display = 'block';
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (err) {
-                alert('Formant Analysis Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-mountain"></i> Formants';
-            }
-        };
-
-        // Pitch Tracking
-        document.getElementById('btn-pitch-analysis').onclick = async () => {
-            const btn = document.getElementById('btn-pitch-analysis');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-
-            try {
-                const res = await fetch('/analyze/pitch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
-
-                const container = document.getElementById('pitch-results');
-                const content = container.querySelector('.pitch-content'); // Assuming a .pitch-content element exists within #pitch-results
-
-                // Set the HTML content, including the canvas element
-                content.innerHTML = `
-                    <div class="pitch-meta" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:1rem;">
-                        <div class="stat-card"><span class="label">Điểm dữ liệu</span><span class="value">${data.pitch_data.length}</span></div>
-                        ${data.pitch_data.length > 0 ? `
-                            <div class="stat-card"><span class="label">Nốt đầu tiên</span><span class="value">${data.pitch_data[0].note}</span></div>
-                            <div class="stat-card"><span class="label">Tần số đầu tiên</span><span class="value">${data.pitch_data[0].frequency.toFixed(2)}Hz</span></div>
-                        ` : ''}
-                    </div>
-                    <canvas id="pitch-canvas-display" width="600" height="300" style="width:100%; height:300px; background:#0a0a0a; border-radius:8px;"></canvas>
-                `;
-
-                // Now get the newly created canvas and draw on it
-                const displayCanvas = document.getElementById('pitch-canvas-display');
-                const displayCtx = displayCanvas.getContext('2d');
-
-                // Background
-                displayCtx.fillStyle = '#0a0a0a';
-                displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height);
-
-                if (data.pitch_data && data.pitch_data.length > 0) {
-                    // Find min/max frequency
-                    const freqs = data.pitch_data.map(p => p.frequency);
-                    const minFreq = Math.min(...freqs);
-                    const maxFreq = Math.max(...freqs);
-                    const freqRange = maxFreq - minFreq;
-
-                    // Draw pitch curve
-                    displayCtx.strokeStyle = '#4CAF50';
-                    displayCtx.lineWidth = 3;
-                    displayCtx.beginPath();
-
-                    data.pitch_data.forEach((point, i) => {
-                        const x = (i / data.pitch_data.length) * displayCanvas.width;
-                        const y = displayCanvas.height - ((point.frequency - minFreq) / freqRange) * (displayCanvas.height - 40) - 20;
-                        if (i === 0) displayCtx.moveTo(x, y);
-                        else displayCtx.lineTo(x, y);
+                try {
+                    const res = await fetch('/process/mix', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tracks: [track] })
                     });
-                    displayCtx.stroke();
-
-                    // Draw points
-                    displayCtx.fillStyle = '#4CAF50';
-                    data.pitch_data.forEach((point, i) => {
-                        const x = (i / data.pitch_data.length) * displayCanvas.width;
-                        const y = displayCanvas.height - ((point.frequency - minFreq) / freqRange) * (displayCanvas.height - 40) - 20;
-                        displayCtx.beginPath();
-                        displayCtx.arc(x, y, 3, 0, Math.PI * 2);
-                        displayCtx.fill();
-                    });
+                    const data = await res.json();
+                    const preview = document.getElementById('single-preview');
+                    if (preview) {
+                        preview.src = data.mix_url;
+                        const resDiv = document.getElementById('single-result');
+                        if (resDiv) resDiv.style.display = 'block';
+                        preview.play();
+                    }
+                } catch (err) { alert(err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.textContent = "Áp dụng & Xuất tệp";
                 }
+            };
+        }
 
-                container.style.display = 'block';
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (err) {
-                alert('Pitch Tracking Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-music"></i> Pitch Tracking';
-            }
-        };
+        // --- Analysis Actions ---
 
-        // Detailed Spectrogram
-        document.getElementById('btn-detailed-spec').onclick = async () => {
-            const btn = document.getElementById('btn-detailed-spec');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        const btnLPC = document.getElementById('btn-lpc-analysis');
+        if (btnLPC) {
+            btnLPC.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
-            try {
-                const res = await fetch('/analyze/detailed_spectrogram', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: session.filename })
-                });
-                const data = await res.json();
+                try {
+                    const res = await fetch('/analyze/lpc', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
 
-                const container = document.getElementById('detailed-spec-results');
-                const content = container.querySelector('.spec-content');
+                    const container = document.getElementById('lpc-results');
+                    if (container) {
+                        const content = container.querySelector('.lpc-content');
+                        if (content) {
+                            content.innerHTML = `
+                                <div style="background: rgba(76, 175, 80, 0.1); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                                    <h4 style="margin:0; color:#4CAF50;">✅ Phân tích LPC hoàn tất</h4>
+                                    <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">
+                                        Tần số lấy mẫu: ${data.lpc_data.sample_rate}Hz | Bậc: ${data.lpc_data.order}
+                                    </p>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                                    <div>
+                                        <h4>Hệ số LPC (10 đầu)</h4>
+                                        <div style="background:#1a1a1a; padding:1rem; border-radius:8px; overflow-x:auto;">
+                                            <code style="color:#4CAF50; font-size:0.85rem;">
+                                                ${data.lpc_data.lpc_coefficients.slice(0, 10).map((c, i) => `a[${i}] = ${c.toFixed(4)}`).join('<br>')}<br>...
+                                            </code>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4>Đồ thị Tự tương quan</h4>
+                                        <img src="${data.autocorrelation_plot}" style="width:100%; border-radius:8px; border:1px solid #333;">
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi LPC: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Phân tích LPC';
+                }
+            };
+        }
 
-                content.innerHTML = `
-                    <h4 style="margin-bottom:1rem; color:#03A9F4;">🖼️ Biểu đồ Phổ chi tiết (FFT 512)</h4>
-                    <img src="${data.spectrogram_url}" class="analysis-img" style="width:100%; border-radius:8px;">
-                    <p style="margin-top:1rem; color:#888; font-size:0.85rem;">
-                        Biểu đồ này hiển thị cường độ âm thanh qua các khung thời gian và dải tần số bin.
-                    </p>
-                `;
+        const btnWaveform = document.getElementById('btn-waveform-analysis');
+        if (btnWaveform) {
+            btnWaveform.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
-                container.style.display = 'block';
-                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } catch (err) {
-                alert('Detailed Spectrogram Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-image"></i> Detailed Spectrogram';
-            }
-        };
+                try {
+                    const res = await fetch('/analyze/waveform', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    const container = document.getElementById('waveform-results');
+                    const canvas = document.getElementById('waveform-canvas');
+                    if (canvas && container) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#0a0a0a';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.strokeStyle = '#FF9800';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        const pts = data.waveform.points;
+                        const sx = canvas.width / 600;
+                        const sy = canvas.height / 300;
+                        pts.forEach((p, i) => {
+                            const vx = p.x * sx;
+                            const vy = canvas.height / 2 - p.y * sy;
+                            if (i === 0) ctx.moveTo(vx, vy);
+                            else ctx.lineTo(vx, vy);
+                        });
+                        ctx.stroke();
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi Waveform: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-water"></i> Dạng sóng';
+                }
+            };
+        }
+
+        const btnHarmonics = document.getElementById('btn-formant-analysis');
+        if (btnHarmonics) {
+            btnHarmonics.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/formants', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    const container = document.getElementById('formant-results');
+                    if (container) {
+                        const content = container.querySelector('.formant-content');
+                        if (content) {
+                            content.innerHTML = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:1rem;">
+                                ${data.formants.map((f, i) => `<div class="stat-card">Bồi âm ${i + 1}<br><b>${f.frequency.toFixed(0)} Hz</b></div>`).join('')}
+                            </div>`;
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi Bồi âm: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-mountain"></i> Bồi âm';
+                }
+            };
+        }
+
+        const btnPitch = document.getElementById('btn-pitch-analysis');
+        if (btnPitch) {
+            btnPitch.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/pitch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    const container = document.getElementById('pitch-results');
+                    if (container) {
+                        const canvas = document.getElementById('pitch-canvas');
+                        if (canvas && data.pitch_data.length > 0) {
+                            const ctx = canvas.getContext('2d');
+                            ctx.fillStyle = '#0a0a0a';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            ctx.strokeStyle = '#4CAF50';
+                            ctx.beginPath();
+                            const freqs = data.pitch_data.map(p => p.frequency);
+                            const minF = Math.min(...freqs);
+                            const maxF = Math.max(...freqs);
+                            const range = (maxF - minF) || 1;
+                            data.pitch_data.forEach((p, i) => {
+                                const px = (i / data.pitch_data.length) * canvas.width;
+                                const py = canvas.height - ((p.frequency - minF) / range) * (canvas.height - 40) - 20;
+                                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                            });
+                            ctx.stroke();
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi Pitch: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-music"></i> Theo dõi cao độ';
+                }
+            };
+        }
+
+        const btnSpec = document.getElementById('btn-detailed-spec');
+        if (btnSpec) {
+            btnSpec.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/detailed_spectrogram', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    const container = document.getElementById('detailed-spec-results');
+                    if (container) {
+                        const content = container.querySelector('.spec-content');
+                        if (content) content.innerHTML = `<img src="${data.spectrogram_url}" style="width:100%; border-radius:8px;">`;
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi Phổ: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-image"></i> Phổ chi tiết';
+                }
+            };
+        }
 
     </script>
 </body>
+
+</html>
