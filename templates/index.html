@@ -219,14 +219,6 @@
                         </button>
                         <p style="font-size:0.85rem; color:#888; margin:0;">VAD - Tự động phát hiện và cắt phần lặng.</p>
                     </div>
-
-                    <div class="tool-card"
-                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                        <button class="btn-primary" id="btn-lpc-synthesis" style="width:100%; margin-bottom:0.5rem;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Tổng hợp từ LPC
-                        </button>
-                        <p style="font-size:0.85rem; color:#888; margin:0;">Tạo âm thanh nhân tạo từ LPC coefficients.</p>
-                    </div>
                 </div>
 
                 <!-- Results Container -->
@@ -323,45 +315,6 @@
                         <div style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
                             <p style="margin: 0; color: #ddd; font-size: 0.9rem;">
                                 <strong>💡 Thông tin:</strong> Phần xanh = âm thanh có voice, phần trắng = silence. Có thể dùng để auto-trim hoặc split tracks.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- LPC Synthesis Results -->
-                    <div id="lpc-synth-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> LPC Speech Synthesis</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                            <div class="stat-box">
-                                <div class="stat-label">Pitch Frequency</div>
-                                <div class="stat-value" id="synth-pitch">-</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-label">LPC Order</div>
-                                <div class="stat-value" id="synth-lpc-order">-</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-label">Excitation Type</div>
-                                <div class="stat-value" id="synth-excitation">-</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-label">Similarity</div>
-                                <div class="stat-value" id="synth-similarity">-</div>
-                            </div>
-                        </div>
-                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #9C27B0;">
-                            <p id="synth-description" style="margin: 0; color: #ddd; font-size: 0.9rem;"></p>
-                        </div>
-                        <div style="margin-bottom: 1.5rem;">
-                            <h4>🔊 Synthesized Audio</h4>
-                            <audio id="synth-audio" controls style="width: 100%; margin-bottom: 1rem;"></audio>
-                        </div>
-                        <div style="margin-bottom: 1.5rem;">
-                            <h4>📊 Waveform & Spectrogram Comparison</h4>
-                            <img id="synth-plot" style="width: 100%; border-radius: 8px; border: 1px solid #333;">
-                        </div>
-                        <div style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-                            <p style="margin: 0; color: #ddd; font-size: 0.9rem;">
-                                <strong>💡 Ứng dụng:</strong> Tạo hiệu ứng robot/alien, voice morphing, hoặc thực hiện đặc tính của LPC analysis bạn vừa học.
                             </p>
                         </div>
                     </div>
@@ -1008,59 +961,6 @@
                 finally {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Phát hiện âm thanh';
-                }
-            };
-        }
-
-        const btnLPCSynth = document.getElementById('btn-lpc-synthesis');
-        if (btnLPCSynth) {
-            btnLPCSynth.onclick = async function () {
-                const btn = this;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-                try {
-                    // Có thể thêm dialog để chọn parameters (pitch, excitation type, gain)
-                    // Tạm thời dùng default
-                    const res = await fetch('/process/synthesize-lpc', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            filename: session.filename,
-                            pitch_frequency: null,  // Auto-detect
-                            gain: 1.0,
-                            excitation_type: 'voiced'
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.error) throw new Error(data.error);
-
-                    const container = document.getElementById('lpc-synth-results');
-                    if (container && data.parameters) {
-                        const params = data.parameters;
-                        const stats = data.statistics;
-                        
-                        // Update parameters
-                        document.getElementById('synth-pitch').textContent = params.pitch_frequency.toFixed(1) + ' Hz';
-                        document.getElementById('synth-lpc-order').textContent = params.lpc_order;
-                        document.getElementById('synth-excitation').textContent = params.excitation_type;
-                        document.getElementById('synth-similarity').textContent = (stats.similarity * 100).toFixed(1) + '%';
-                        document.getElementById('synth-description').textContent = data.description;
-                        
-                        // Set audio source
-                        const audioEl = document.getElementById('synth-audio');
-                        audioEl.src = data.synthesized_audio_url;
-                        
-                        // Set plot image
-                        const plotImg = document.getElementById('synth-plot');
-                        plotImg.src = data.plot_url;
-                        
-                        container.style.display = 'block';
-                        container.scrollIntoView({ behavior: 'smooth' });
-                    }
-                } catch (err) { alert('Lỗi Synthesis: ' + err.message); }
-                finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Tổng hợp từ LPC';
                 }
             };
         }
