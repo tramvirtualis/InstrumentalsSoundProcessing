@@ -1,6 +1,7 @@
 import numpy as np
 import librosa
 import soundfile as sf
+import scipy.signal
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -399,6 +400,281 @@ class InstrumentVoiceProcessor:
         
         return pitch_data[:100]  # Giới hạn 100 điểm để tránh quá tải
     
+    def voice_activity_detection(self, audio_path, frame_length=2048, hop_length=512, energy_threshold=0.02, zcr_threshold=None):
+        """
+        Voice Activity Detection (VAD) - Endpoint Detection
+        Phát hiện phần có âm thanh và phần lặng.
+        
+        Kết hợp hai tiêu chí:
+        1. Energy (RMS) - âm thanh lớn → có voice
+        2. Zero-Crossing Rate - âm thanh nhanh thay đổi → có voice
+        
+        Args:
+            audio_path: Đường dẫn file audio
+            frame_length: Độ dài frame (samples)
+            hop_length: Bước nhảy giữa các frame
+            energy_threshold: Ngưỡng năng lượng chuẩn hóa (0-1)
+            zcr_threshold: Ngưỡng ZCR (auto nếu None)
+            
+        Returns:
+            dict: Chứa:
+                - activity_frames: List bool cho mỗi frame
+                - segments: Danh sách [start_time, end_time] của voice segments
+                - silence_segments: Danh sách [start_time, end_time] của silence
+                - trimmed_audio: Audio sau khi cắt silence đầu/cuối
+                - statistics: Thống kê về âm thanh
+                - vad_plot: URL biểu đồ VAD
+        """
+        try:
+            y, sr = librosa.load(audio_path, sr=None, mono=True)
+        except Exception as e:
+            print(f"ERROR VAD: {e}")
+            data, sr = sf.read(audio_path, dtype='float32')
+            y = data if len(data.shape) == 1 else data[:, 0]
+        
+        duration = len(y) / sr
+        
+        # 1. Tính Energy (RMS) theo frame
+        energy = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop_length)[0]
+        energy_normalized = energy / np.max(energy) if np.max(energy) > 0 else energy
+        
+        # 2. Tính ZCR theo frame
+        zcr = librosa.feature.zero_crossing_rate(y, frame_length=frame_length, hop_length=hop_length)[0]
+        zcr_mean = np.mean(zcr)
+        zcr_std = np.std(zcr)
+        if zcr_threshold is None:
+            zcr_threshold = zcr_mean + 0.5 * zcr_std
+        
+        # 3. Kết hợp Energy + ZCR để phát hiện voice
+        # Voice thường có energy cao hoặc ZCR cao (change quickly)
+        energy_voicing = energy_normalized > energy_threshold
+        zcr_voicing = zcr > zcr_threshold
+        
+        # Kết hợp: frame là voice nếu thỏa mãn (energy cao) hoặc (ZCR cao)
+        activity = (energy_voicing | zcr_voicing).astype(int)
+        
+        # 4. Áp dụng smoothing (median filter) để loại bỏ noise spike
+        activity_smooth = scipy.signal.medfilt(activity, kernel_size=5)
+        
+        # 5. Tìm voice segments (bắt đầu/kết thúc)
+        # Tính transition: 0→1 là bắt đầu, 1→0 là kết thúc
+        activity_padded = np.pad(activity_smooth, (1, 1), constant_values=0)
+        transitions = np.diff(activity_padded.astype(int))
+        
+        starts_indices = np.where(transitions == 1)[0]
+        ends_indices = np.where(transitions == -1)[0]
+        
+        # Convert frame indices to time (seconds)
+        times = librosa.frames_to_time(np.arange(len(activity_smooth)), sr=sr, hop_length=hop_length)
+        
+        segments = []
+        for start_idx, end_idx in zip(starts_indices, ends_indices):
+            start_time = times[start_idx]
+            end_time = times[min(end_idx, len(times) - 1)]
+            # Chỉ giữ segments dài ít nhất 0.1 giây
+            if end_time - start_time >= 0.1:
+                segments.append({
+                    'start': float(start_time),
+                    'end': float(end_time),
+                    'duration': float(end_time - start_time)
+                })
+        
+        # 6. Tìm silence segments (phần còn lại)
+        silence_segments = []
+        if len(segments) > 0:
+            # Silence ở đầu
+            if segments[0]['start'] > 0.1:
+                silence_segments.append({
+                    'start': 0.0,
+                    'end': segments[0]['start'],
+                    'duration': segments[0]['start']
+                })
+            # Silence giữa các segments
+            for i in range(len(segments) - 1):
+                gap_start = segments[i]['end']
+                gap_end = segments[i + 1]['start']
+                if gap_end - gap_start >= 0.05:
+                    silence_segments.append({
+                        'start': float(gap_start),
+                        'end': float(gap_end),
+                        'duration': float(gap_end - gap_start)
+                    })
+            # Silence ở cuối
+            if segments[-1]['end'] < duration - 0.1:
+                silence_segments.append({
+                    'start': segments[-1]['end'],
+                    'end': duration,
+                    'duration': duration - segments[-1]['end']
+                })
+        else:
+            # Toàn bộ là silence
+            silence_segments.append({
+                'start': 0.0,
+                'end': duration,
+                'duration': duration
+            })
+        
+        # 7. Auto-trim: loại bỏ silence ở đầu/cuối
+        if len(segments) > 0:
+            trim_start = int(segments[0]['start'] * sr)
+            trim_end = int(segments[-1]['end'] * sr)
+            trimmed_audio = y[trim_start:trim_end]
+        else:
+            trimmed_audio = y
+        
+        # 8. Tạo biểu đồ VAD
+        fig, axes = plt.subplots(3, 1, figsize=(14, 8))
+        
+        # Plot 1: Waveform với VAD overlay
+        ax1 = axes[0]
+        time_samples = np.arange(len(y)) / sr
+        ax1.plot(time_samples, y, linewidth=0.5, color='#1f77b4', alpha=0.7, label='Waveform')
+        # Tô màu phần có voice
+        for seg in segments:
+            ax1.axvspan(seg['start'], seg['end'], alpha=0.2, color='#2ca02c', label='Voice' if seg == segments[0] else '')
+        ax1.set_ylabel('Amplitude')
+        ax1.set_title('Waveform với Voice Activity Detection', fontsize=12, fontweight='bold')
+        ax1.legend(loc='upper right')
+        ax1.grid(True, alpha=0.3)
+        
+        # Plot 2: Energy
+        ax2 = axes[1]
+        times_frame = librosa.frames_to_time(np.arange(len(energy_normalized)), sr=sr, hop_length=hop_length)
+        ax2.plot(times_frame, energy_normalized, linewidth=1.5, color='#ff7f0e', label='Energy (normalized)')
+        ax2.axhline(y=energy_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold: {energy_threshold}')
+        ax2.fill_between(times_frame, 0, energy_normalized, where=(energy_voicing > 0), alpha=0.3, color='#2ca02c')
+        ax2.set_ylabel('Normalized Energy')
+        ax2.set_title('Energy Analysis', fontsize=11)
+        ax2.legend(loc='upper right')
+        ax2.grid(True, alpha=0.3)
+        
+        # Plot 3: Voice Activity
+        ax3 = axes[2]
+        ax3.fill_between(times_frame, 0, activity_smooth, step='post', alpha=0.6, color='#2ca02c', label='Voice Activity')
+        ax3.set_xlabel('Time (s)')
+        ax3.set_ylabel('Activity')
+        ax3.set_ylim([-0.1, 1.1])
+        ax3.set_title('Voice Activity Detected', fontsize=11)
+        ax3.legend(loc='upper right')
+        ax3.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        vad_plot_path = Path('static/spectrograms') / f"vad_{np.random.randint(10000, 99999)}.png"
+        plt.savefig(vad_plot_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        
+        # 9. Tính thống kê
+        total_voice_time = sum(seg['duration'] for seg in segments)
+        total_silence_time = sum(seg['duration'] for seg in silence_segments)
+        voice_ratio = (total_voice_time / duration * 100) if duration > 0 else 0
+        
+        return {
+            'segments': segments,
+            'silence_segments': silence_segments,
+            'activity_frames': activity_smooth.tolist(),
+            'total_voice_time': float(total_voice_time),
+            'total_silence_time': float(total_silence_time),
+            'voice_ratio': float(voice_ratio),
+            'total_duration': float(duration),
+            'num_voice_segments': len(segments),
+            'num_silence_segments': len(silence_segments),
+            'energy_threshold': float(energy_threshold),
+            'zcr_threshold': float(zcr_threshold),
+            'vad_plot': f"/static/spectrograms/{vad_plot_path.name}",
+            'trimmed_audio_duration': float(len(trimmed_audio) / sr),
+            'energy_stats': {
+                'mean': float(np.mean(energy_normalized)),
+                'std': float(np.std(energy_normalized)),
+                'max': float(np.max(energy_normalized))
+            },
+            'zcr_stats': {
+                'mean': float(zcr_mean),
+                'std': float(zcr_std),
+                'max': float(np.max(zcr))
+            }
+        }
+
+    def zero_crossing_rate(self, audio_path, frame_length=2048, hop_length=512):
+        """
+        Tính Zero-Crossing Rate (ZCR) - số lần sóng cắt qua trục 0
+        
+        ZCR cao → tín hiệu thay đổi nhanh (unvoiced, noise)
+        ZCR thấp → tín hiệu thay đổi chậm (voiced, smooth)
+        
+        Args:
+            audio_path: Đường dẫn file audio
+            frame_length: Độ dài frame (samples)
+            hop_length: Bước nhảy giữa các frame (samples)
+            
+        Returns:
+            dict: ZCR time series, mean ZCR, visualization
+        """
+        try:
+            y, sr = librosa.load(audio_path, sr=None, mono=True)
+        except Exception as e:
+            print(f"ERROR ZCR: {e}")
+            data, sr = sf.read(audio_path, dtype='float32')
+            y = data if len(data.shape) == 1 else data[:, 0]
+        
+        # Tính ZCR theo frame
+        zcr = librosa.feature.zero_crossing_rate(y, frame_length=frame_length, hop_length=hop_length)[0]
+        
+        # Tính thời gian tương ứng
+        times = librosa.frames_to_time(np.arange(len(zcr)), sr=sr, hop_length=hop_length)
+        
+        # Tính các thống kê
+        mean_zcr = float(np.mean(zcr))
+        std_zcr = float(np.std(zcr))
+        max_zcr = float(np.max(zcr))
+        min_zcr = float(np.min(zcr))
+        
+        # Phân loại voiced/unvoiced dựa trên threshold
+        threshold = mean_zcr + 0.5 * std_zcr
+        voiced_unvoiced = (zcr > threshold).astype(int).tolist()
+        
+        # Tạo dữ liệu để hiển thị (giảm số điểm nếu quá nhiều)
+        step = max(1, len(zcr) // 200)  # Tối đa 200 điểm
+        zcr_data = []
+        for i in range(0, len(zcr), step):
+            zcr_data.append({
+                'time': float(times[i]),
+                'zcr': float(zcr[i]),
+                'type': 'voiced' if voiced_unvoiced[i] == 0 else 'unvoiced'
+            })
+        
+        # Tạo biểu đồ ZCR
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 6))
+        
+        # Plot 1: Waveform
+        librosa.display.waveshow(y, sr=sr, ax=ax1, alpha=0.7, color='#1f77b4')
+        ax1.set_title('Waveform')
+        ax1.set_ylabel('Amplitude')
+        
+        # Plot 2: ZCR
+        ax2.semilogy(times, zcr, linewidth=2, color='#ff7f0e', label='ZCR')
+        ax2.axhline(y=threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({threshold:.4f})')
+        ax2.set_xlabel('Time (s)')
+        ax2.set_ylabel('Zero-Crossing Rate')
+        ax2.set_title('Zero-Crossing Rate Analysis')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        zcr_plot_path = Path('static/spectrograms') / f"zcr_{np.random.randint(10000, 99999)}.png"
+        plt.savefig(zcr_plot_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        
+        return {
+            'zcr_data': zcr_data,
+            'mean_zcr': mean_zcr,
+            'std_zcr': std_zcr,
+            'max_zcr': max_zcr,
+            'min_zcr': min_zcr,
+            'threshold': threshold,
+            'zcr_plot': f"/static/spectrograms/{zcr_plot_path.name}",
+            'description': 'ZCR cao = tín hiệu nhanh (unvoiced), ZCR thấp = tín hiệu chậm (voiced)'
+        }
+
     def generate_autocorrelation_plot(self, audio_path, output_dir, max_lag=100):
         """
         Vẽ đồ thị autocorrelation

@@ -260,6 +260,54 @@ async def analyze_pitch(request: Request):
         traceback.print_exc()
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.post("/analyze/zcr")
+async def analyze_zcr(request: Request):
+    """Phân tích Zero-Crossing Rate"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        zcr_results = processor.zero_crossing_rate(file_path)
+        return JSONResponse(content={
+            "message": "ZCR analysis complete",
+            "zcr_data": zcr_results
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.post("/analyze/vad")
+async def analyze_vad(request: Request):
+    """Voice Activity Detection - Endpoint Detection"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        processor = InstrumentVoiceProcessor()
+        vad_results = processor.voice_activity_detection(file_path)
+        return JSONResponse(content={
+            "message": "VAD analysis complete",
+            "vad_data": vad_results
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
