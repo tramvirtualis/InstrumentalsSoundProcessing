@@ -315,6 +315,32 @@ async def analyze_cutoff(request: Request):
             f.write(f"ERROR in analyze_cutoff:\n{error_trace}\n")
         return JSONResponse(content={"error": f"Lỗi xử lý Tần số cắt: {str(e)}"}, status_code=500)
 
+@app.post("/analyze/features")
+async def analyze_features(request: Request):
+    """Trích chọn đặc trưng âm thanh (Academic Features)"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    file_path = UPLOAD_DIR / filename
+    
+    with open("debug_error.log", "a", encoding="utf-8") as f:
+        f.write(f"Features Extraction Request for: {filename}\n")
+        
+    if not file_path.exists():
+        return JSONResponse(content={"error": f"Không tìm thấy tệp tin: {filename}"}, status_code=404)
+        
+    try:
+        processor = InstrumentVoiceProcessor()
+        features = processor.extract_acoustic_features(file_path)
+        return JSONResponse(content=features)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        with open("debug_error.log", "a", encoding="utf-8") as f:
+            f.write(f"ERROR in analyze_features:\n{error_trace}\n")
+        return JSONResponse(content={"error": f"Lỗi trích xuất đặc trưng: {str(e)}"}, status_code=500)
+
 if __name__ == "__main__":
     import uvicorn
     # Use import string "main:app" and reload=True for development

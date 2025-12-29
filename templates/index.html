@@ -221,6 +221,15 @@
                         <p style="font-size:0.85rem; color:#888; margin:0;">Xác định giới hạn tần số (Spectral Rolloff).
                         </p>
                     </div>
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-feature-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-flask"></i> Trích đặc điểm (Features)
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">ZCR, Centroid, Bandwidth, Energy (Academic
+                            stats).</p>
+                    </div>
+
                 </div>
             </div>
 
@@ -270,6 +279,12 @@
                 <div id="cutoff-results" class="analysis-card" style="display:none;">
                     <h3><i class="fa-solid fa-filter"></i> Cutoff Frequency Analysis</h3>
                     <div class="cutoff-content"></div>
+                </div>
+
+                <!-- Features Results -->
+                <div id="feature-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-flask"></i> Acoustic Feature Extraction</h3>
+                    <div class="feature-content"></div>
                 </div>
             </div>
         </div>
@@ -955,6 +970,69 @@
                 finally {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-filter"></i> Tần số cắt';
+                }
+            };
+        }
+
+        // Feature Extraction Analysis
+        const btnFeatures = document.getElementById('btn-feature-analysis');
+        if (btnFeatures) {
+            btnFeatures.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/features', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+
+                    let data;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        throw new Error("Phản hồi từ máy chủ không hợp lệ (Not JSON)");
+                    }
+
+                    if (!res.ok || data.error) throw new Error(data.error || "Không thể trích xuất đặc trưng");
+
+                    const container = document.getElementById('feature-results');
+                    if (container) {
+                        const content = container.querySelector('.feature-content');
+                        if (content) {
+                            content.innerHTML = `
+                                <div class="analysis-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                                    <div class="stat-card">
+                                        <span>Spectral Centroid</span><br>
+                                        <b style="color: #4CAF50;">${data.spectral_centroid.mean.toFixed(2)} Hz</b>
+                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.spectral_centroid.desc}</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <span>Zero Crossing Rate</span><br>
+                                        <b style="color: #2196F3;">${data.zcr.mean.toFixed(4)}</b>
+                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.zcr.desc}</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <span>Spectral Bandwidth</span><br>
+                                        <b style="color: #FF9800;">${data.spectral_bandwidth.mean.toFixed(2)} Hz</b>
+                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.spectral_bandwidth.desc}</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <span>RMS Energy</span><br>
+                                        <b style="color: #E91E63;">${data.rms_energy.mean.toFixed(4)}</b>
+                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.rms_energy.desc}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi trích xuất: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-flask"></i> Trích đặc điểm (Features)';
                 }
             };
         }
