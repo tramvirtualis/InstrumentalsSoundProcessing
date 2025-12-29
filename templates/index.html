@@ -226,8 +226,8 @@
                         <button class="btn-primary" id="btn-feature-analysis" style="width:100%; margin-bottom:0.5rem;">
                             <i class="fa-solid fa-flask"></i> Trích đặc điểm (Features)
                         </button>
-                        <p style="font-size:0.85rem; color:#888; margin:0;">ZCR, Centroid, Bandwidth, Energy (Academic
-                            stats).</p>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Short-time Energy, ZCR, Endpoint, Pitch,
+                            Formants.</p>
                     </div>
 
                 </div>
@@ -1004,24 +1004,31 @@
                             content.innerHTML = `
                                 <div class="analysis-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
                                     <div class="stat-card">
-                                        <span>Spectral Centroid</span><br>
-                                        <b style="color: #4CAF50;">${data.spectral_centroid.mean.toFixed(2)} Hz</b>
-                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.spectral_centroid.desc}</div>
+                                        <span>Short-time Energy</span><br>
+                                        <b style="color: #FF9800;">${data.ste.val.toFixed(4)}</b>
                                     </div>
                                     <div class="stat-card">
-                                        <span>Zero Crossing Rate</span><br>
-                                        <b style="color: #2196F3;">${data.zcr.mean.toFixed(4)}</b>
-                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.zcr.desc}</div>
+                                        <span>Zero-crossing Rate</span><br>
+                                        <b style="color: #2196F3;">${data.zcr.val.toFixed(4)}</b>
                                     </div>
                                     <div class="stat-card">
-                                        <span>Spectral Bandwidth</span><br>
-                                        <b style="color: #FF9800;">${data.spectral_bandwidth.mean.toFixed(2)} Hz</b>
-                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.spectral_bandwidth.desc}</div>
+                                        <span>Endpoint Detect (Active)</span><br>
+                                        <b style="color: #4CAF50;">${data.endpoint.val.toFixed(2)} s</b>
                                     </div>
                                     <div class="stat-card">
-                                        <span>RMS Energy</span><br>
-                                        <b style="color: #E91E63;">${data.rms_energy.mean.toFixed(4)}</b>
-                                        <div style="font-size:0.8rem; color:#888; margin-top:0.2rem;">${data.rms_energy.desc}</div>
+                                        <span>Pitch (Autocorrelation)</span><br>
+                                        <b style="color: #E91E63;">${data.pitch.val.toFixed(2)} Hz</b>
+                                    </div>
+                                     <div class="stat-card">
+                                        <span>Formants (LPC)</span><br>
+                                        <b style="color: #9C27B0;">F1: ${data.formants.f1.toFixed(0)} Hz</b><br>
+                                        <b style="color: #9C27B0;">F2: ${data.formants.f2.toFixed(0)} Hz</b>
+                                    </div>
+                                     <div class="stat-card">
+                                        <span>Phonetic (MFCC 1-4)</span><br>
+                                        <span style="font-size:0.8rem; color:#ccc;">
+                                            [${data.phonetic.mfcc.map(v => v.toFixed(1)).join(', ')}]
+                                        </span>
                                     </div>
                                 </div>
                             `;

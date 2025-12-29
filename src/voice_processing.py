@@ -500,16 +500,15 @@ class InstrumentVoiceProcessor:
 
     def extract_acoustic_features(self, audio_path):
         """
-        Trích xuất các đặc trưng âm thanh (Acoustic Features)
-        Dựa trên các tài liệu học thuật về Music Information Retrieval (MIR)
-        
-        Features:
-        1. Zero Crossing Rate (ZCR): Độ ồn/sắc của âm thanh
-        2. Spectral Centroid: Trọng tâm phổ (độ sáng)
-        3. Spectral Bandwidth: Độ rộng băng tần
-        4. RMS Energy: Năng lượng trung bình
+        Extract Audio Features based on user request (Chapter 4 ref)
+        4.1 Short-time energy
+        4.2 Zero-crossing rate
+        4.3 Endpoint detection
+        4.5 Formant tracking
+        4.6 Pitch extraction (Autocorrelation)
+        4.7 Phonetic analysis (MFCCs)
         """
-        # Load output
+        # Load audio
         try:
             y, sr = librosa.load(str(audio_path), sr=None, mono=True)
         except Exception:
@@ -521,41 +520,76 @@ class InstrumentVoiceProcessor:
         if len(y) == 0:
             raise ValueError("Empty audio file")
 
-        # 1. Zero Crossing Rate
-        zcr = librosa.feature.zero_crossing_rate(y)
-        zcr_mean = float(np.mean(zcr))
-        zcr_var = float(np.var(zcr))
+        # Configurations
+        frame_length = 1024
+        hop_length = 512
 
-        # 2. Spectral Centroid (Brightness)
-        centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
-        cent_mean = float(np.mean(centroid))
+        # 4.1 Short-time Energy
+        energy = np.array([
+            np.sum(np.abs(y[i:i+frame_length]**2))
+            for i in range(0, len(y), hop_length)
+        ])
+        ste_mean = float(np.mean(energy))
+
+        # 4.2 Zero-crossing rate
+        zcr = librosa.feature.zero_crossing_rate(y, frame_length=frame_length, hop_length=hop_length)
+        zcr_mean = float(np.mean(zcr))
+
+        # 4.3 Endpoint detection (Active Duration)
+        intervals = librosa.effects.split(y, top_db=25)
+        active_duration = float(np.sum([end-start for start, end in intervals]) / sr) if len(intervals) > 0 else 0.0
         
-        # 3. Spectral Bandwidth
-        bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-        bw_mean = float(np.mean(bandwidth))
-        
-        # 4. RMS Energy
-        rms = librosa.feature.rms(y=y)
-        rms_mean = float(np.mean(rms))
-        
+        # 4.6 Pitch extraction (Autocorrelation method - YIN)
+        # YIN is improved autocorrelation
+        f0 = librosa.yin(y, fmin=50, fmax=2000, sr=sr)
+        pitch_mean = float(np.mean(f0[~np.isnan(f0)])) if np.any(~np.isnan(f0)) else 0.0
+
+        # 4.5 Formant tracking (Simplified LPC estimate on central frame)
+        # Find a strong central frame
+        center_idx = len(y) // 2
+        frame = y[center_idx:center_idx+frame_length]
+        # LPC
+        try:
+            a = librosa.lpc(frame, order=12)
+            roots = np.roots(a)
+            roots = [r for r in roots if np.imag(r) >= 0]
+            angz = np.arctan2(np.imag(roots), np.real(roots))
+            freqs = sorted(angz * (sr / (2 * np.pi)))
+            # Filter low freqs and too close ones
+            formants = [f for f in freqs if f > 90 and f < 4000]
+            f1 = formants[0] if len(formants) > 0 else 0
+            f2 = formants[1] if len(formants) > 1 else 0
+        except:
+            f1, f2 = 0, 0
+
+        # 4.7 Phonetic/Timbre Analysis (MFCCs)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        mfcc_mean = np.mean(mfcc, axis=1).tolist()
+
         return {
+            "ste": {
+                "val": ste_mean,
+                "label": "Short-time Energy"
+            },
             "zcr": {
-                "mean": zcr_mean,
-                "var": zcr_var,
-                "desc": "Tỷ lệ qua điểm 0 (Độ sắc/ồn)"
+                "val": zcr_mean,
+                "label": "Zero-crossing Rate"
             },
-            "spectral_centroid": {
-                "mean": cent_mean,
-                "unit": "Hz",
-                "desc": "Trọng tâm phổ (Độ sáng)"
+            "endpoint": {
+                "val": active_duration,
+                "label": "Active Duration (Endpoint)"
             },
-            "spectral_bandwidth": {
-                "mean": bw_mean,
-                "unit": "Hz",
-                "desc": "Độ rộng băng tần hiệu dụng"
+            "pitch": {
+                "val": pitch_mean,
+                "label": "Pitch (Autocorrelation)"
             },
-            "rms_energy": {
-                "mean": rms_mean,
-                "desc": "Năng lượng trung bình (Âm lượng)"
+            "formants": {
+                "f1": float(f1),
+                "f2": float(f2),
+                "label": "Formants (F1, F2)"
+            },
+            "phonetic": {
+                "mfcc": mfcc_mean[:4], # First 4 coeffs
+                "label": "Phonetic Features (MFCC)"
             }
         }
