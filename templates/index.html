@@ -203,6 +203,22 @@
                         <p style="font-size:0.85rem; color:#888; margin:0;">Biểu đồ FFT độ phân giải cao cho cái nhìn
                             sâu sắc nhất.</p>
                     </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-zcr-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-wave-square"></i> Tần số cắt 0
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Phân tích Zero-Crossing Rate để phát hiện voiced/unvoiced.</p>
+                    </div>
+
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-vad-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-microphone"></i> Phát hiện âm thanh
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">VAD - Tự động phát hiện và cắt phần lặng.</p>
+                    </div>
                 </div>
 
                 <!-- Results Container -->
@@ -239,6 +255,68 @@
                     <div id="detailed-spec-results" class="analysis-card" style="display:none;">
                         <h3><i class="fa-solid fa-image"></i> Detailed Spectrogram (FFT-based)</h3>
                         <div class="spec-content"></div>
+                    </div>
+
+                    <!-- ZCR Results -->
+                    <div id="zcr-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-wave-square"></i> Zero-Crossing Rate Analysis</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div class="stat-box">
+                                <div class="stat-label">Mean ZCR</div>
+                                <div class="stat-value" id="zcr-mean">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Std Dev ZCR</div>
+                                <div class="stat-value" id="zcr-std">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Max ZCR</div>
+                                <div class="stat-value" id="zcr-max">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Min ZCR</div>
+                                <div class="stat-value" id="zcr-min">-</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #4CAF50;">
+                            <p id="zcr-description" style="margin: 0; color: #ddd; font-size: 0.9rem;"></p>
+                        </div>
+                        <img id="zcr-plot" style="width: 100%; border-radius: 8px; border: 1px solid #333;">
+                    </div>
+
+                    <!-- VAD Results -->
+                    <div id="vad-results" class="analysis-card" style="display:none;">
+                        <h3><i class="fa-solid fa-microphone"></i> Voice Activity Detection (Endpoint Detection)</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div class="stat-box">
+                                <div class="stat-label">Tổng thời lượng</div>
+                                <div class="stat-value" id="vad-total-duration">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Thời gian có âm thanh</div>
+                                <div class="stat-value" id="vad-voice-time">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Tỷ lệ âm thanh</div>
+                                <div class="stat-value" id="vad-voice-ratio">-</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Số segments</div>
+                                <div class="stat-value" id="vad-num-segments">-</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(76, 175, 80, 0.1); border-radius: 8px; border-left: 4px solid #4CAF50;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #4CAF50;">Voice Segments (Phần có âm thanh)</h4>
+                            <div id="vad-segments-list" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <img id="vad-plot" style="width: 100%; border-radius: 8px; border: 1px solid #333;">
+                        </div>
+                        <div style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                            <p style="margin: 0; color: #ddd; font-size: 0.9rem;">
+                                <strong>💡 Thông tin:</strong> Phần xanh = âm thanh có voice, phần trắng = silence. Có thể dùng để auto-trim hoặc split tracks.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -481,7 +559,7 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
                     <div class="control-group">
                         <div class="control-label"><span>Âm lượng</span> <span class="val">1.0</span></div>
-                        <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
+                        <input type="range" class="control-slider vol-slider" min="0" max="1" step="0.1" value="1.0">
                     </div>
                     <div class="control-group">
                         <div class="control-label"><span>Tốc độ</span> <span class="val">1.0</span>x</div>
@@ -496,9 +574,13 @@
 
             strip.querySelectorAll('input').forEach(input => {
                 input.oninput = (e) => {
-                    let val = e.target.value;
-                    const valEl = e.target.previousElementSibling.querySelector('.val');
-                    if (valEl) valEl.textContent = val;
+                    let val = parseFloat(e.target.value).toFixed(1);
+                    // Find the .val span in the previous control-label div
+                    const controlGroup = e.target.closest('.control-group');
+                    if (controlGroup) {
+                        const valEl = controlGroup.querySelector('.val');
+                        if (valEl) valEl.textContent = val;
+                    }
                 };
             });
 
@@ -785,6 +867,100 @@
                 finally {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-image"></i> Phổ chi tiết';
+                }
+            };
+        }
+
+        const btnZCR = document.getElementById('btn-zcr-analysis');
+        if (btnZCR) {
+            btnZCR.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/zcr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+
+                    const container = document.getElementById('zcr-results');
+                    if (container && data.zcr_data) {
+                        const zcr = data.zcr_data;
+                        
+                        // Update statistics
+                        document.getElementById('zcr-mean').textContent = zcr.mean_zcr.toFixed(4);
+                        document.getElementById('zcr-std').textContent = zcr.std_zcr.toFixed(4);
+                        document.getElementById('zcr-max').textContent = zcr.max_zcr.toFixed(4);
+                        document.getElementById('zcr-min').textContent = zcr.min_zcr.toFixed(4);
+                        document.getElementById('zcr-description').textContent = zcr.description;
+                        
+                        // Update plot image
+                        const plotImg = document.getElementById('zcr-plot');
+                        plotImg.src = zcr.zcr_plot;
+                        
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi ZCR: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-wave-square"></i> Tần số cắt 0';
+                }
+            };
+        }
+
+        const btnVAD = document.getElementById('btn-vad-analysis');
+        if (btnVAD) {
+            btnVAD.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/vad', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+
+                    const container = document.getElementById('vad-results');
+                    if (container && data.vad_data) {
+                        const vad = data.vad_data;
+                        
+                        // Update statistics
+                        document.getElementById('vad-total-duration').textContent = vad.total_duration.toFixed(2) + 's';
+                        document.getElementById('vad-voice-time').textContent = vad.total_voice_time.toFixed(2) + 's';
+                        document.getElementById('vad-voice-ratio').textContent = vad.voice_ratio.toFixed(1) + '%';
+                        document.getElementById('vad-num-segments').textContent = vad.num_voice_segments;
+                        
+                        // Display voice segments
+                        const segmentsList = document.getElementById('vad-segments-list');
+                        if (vad.segments.length > 0) {
+                            segmentsList.innerHTML = vad.segments.map(seg => `
+                                <div style="padding:0.5rem; margin:0.3rem 0; background:rgba(76,175,80,0.1); border-radius:4px; font-size:0.85rem;">
+                                    <strong>[${seg.start.toFixed(2)}s - ${seg.end.toFixed(2)}s]</strong> 
+                                    Duration: ${seg.duration.toFixed(2)}s
+                                </div>
+                            `).join('');
+                        } else {
+                            segmentsList.innerHTML = '<p style="color:#999;">Không phát hiện voice segments</p>';
+                        }
+                        
+                        // Update plot image
+                        const plotImg = document.getElementById('vad-plot');
+                        plotImg.src = vad.vad_plot;
+                        
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi VAD: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Phát hiện âm thanh';
                 }
             };
         }

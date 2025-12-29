@@ -94,8 +94,10 @@ def apply_audio_effects(stems_data, output_path):
         # 7. Volume & Pan
         vol = float(stem.get('volume', 1.0))
         pan = float(stem.get('pan', 0.0))
-        left_gain = vol * (1.0 - max(0, pan))
-        right_gain = vol * (1.0 - max(0, -pan))
+        # Simple linear pan: -1.0 = left only, 0.0 = both, 1.0 = right only
+        left_gain = vol * max(0, 1.0 - pan)
+        right_gain = vol * max(0, 1.0 + pan)
+        print(f"  Volume: {vol}x, Pan: {pan} (L gain: {left_gain:.3f}, R gain: {right_gain:.3f})")
         y[0] *= left_gain
         y[1] *= right_gain
 
@@ -111,10 +113,24 @@ def apply_audio_effects(stems_data, output_path):
             master_audio = combined
 
     if master_audio is not None:
-        # Final Norm
+        # Print mix statistics before final processing
         peak = np.max(np.abs(master_audio))
-        if peak > 1e-4:
-            master_audio = master_audio / peak * 0.95
+        rms = np.sqrt(np.mean(master_audio ** 2))
+        print(f"Mix statistics - Peak: {peak:.4f}, RMS: {rms:.4f}")
+        
+        # Apply SOFT clipping only if peak > 1.0 to prevent distortion
+        # But use a gentler curve that preserves volume relationship
+        if peak > 1.0:
+            # Use a soft clipping function that's less aggressive than tanh
+            # This prevents digital clipping while minimizing amplitude compression
+            print(f"  Applying soft clipping (peak {peak:.2f}x)")
+            # Soft knee compressor approach: gradually reduce gain as it approaches 1.0
+            threshold = 0.9
+            if peak > threshold:
+                # Scale down the gain above threshold more gently
+                scale = threshold + (1.0 - threshold) / (1.0 + (peak - threshold))
+                master_audio = master_audio * (scale / peak)
+                print(f"  Gain scaling applied: {scale / peak:.3f}x")
         
         sf.write(output_path, master_audio.T, master_sr)
         print(f"Successfully rendered mix to {output_path}")
