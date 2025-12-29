@@ -260,6 +260,62 @@ async def analyze_pitch(request: Request):
         traceback.print_exc()
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.post("/analyze/vad")
+async def analyze_vad(request: Request):
+    """Phân đoạn tín hiệu (VAD)"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    file_path = UPLOAD_DIR / filename
+    
+    # Debug logging
+    with open("debug_error.log", "a", encoding="utf-8") as f:
+        f.write(f"VAD Request for: {filename}\n")
+        f.write(f"Checking path: {file_path.absolute()}\n")
+        f.write(f"Path exists: {file_path.exists()}\n")
+
+    if not file_path.exists():
+        return JSONResponse(content={"error": f"Không tìm thấy tệp tin: {filename}"}, status_code=404)
+        
+    try:
+        processor = InstrumentVoiceProcessor()
+        vad_results = processor.analyze_vad(file_path)
+        return JSONResponse(content=vad_results)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        with open("debug_error.log", "a", encoding="utf-8") as f:
+            f.write(f"ERROR in analyze_vad:\n{error_trace}\n")
+        return JSONResponse(content={"error": f"Lỗi xử lý VAD: {str(e)}"}, status_code=500)
+
+@app.post("/analyze/cutoff")
+async def analyze_cutoff(request: Request):
+    """Xác định tần số cắt"""
+    data = await request.json()
+    filename = data.get("filename")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    file_path = UPLOAD_DIR / filename
+    
+    with open("debug_error.log", "a", encoding="utf-8") as f:
+        f.write(f"Cutoff Request for: {filename}\n")
+    
+    if not file_path.exists():
+        return JSONResponse(content={"error": f"Không tìm thấy tệp tin: {filename}"}, status_code=404)
+        
+    try:
+        processor = InstrumentVoiceProcessor()
+        cutoff_results = processor.analyze_cutoff(file_path)
+        return JSONResponse(content=cutoff_results)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        with open("debug_error.log", "a", encoding="utf-8") as f:
+            f.write(f"ERROR in analyze_cutoff:\n{error_trace}\n")
+        return JSONResponse(content={"error": f"Lỗi xử lý Tần số cắt: {str(e)}"}, status_code=500)
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # Use import string "main:app" and reload=True for development
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

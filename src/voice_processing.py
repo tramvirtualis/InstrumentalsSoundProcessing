@@ -427,3 +427,73 @@ class InstrumentVoiceProcessor:
         plt.close()
         
         return str(output_path.name)
+
+    def analyze_vad(self, audio_path):
+        """
+        Phân đoạn tín hiệu (VAD - Voice/Activity Activity Detection)
+        Sử dụng năng lượng để xác định các đoạn có âm thanh
+        """
+        # Load audio (use sr=None to get original sample rate)
+        try:
+            y, sr = librosa.load(str(audio_path), sr=None, mono=True)
+        except Exception as e:
+            print(f"DEBUG VAD: Error loading file with librosa: {e}")
+            # Fallback
+            import soundfile as sf
+            y, sr = sf.read(str(audio_path))
+            if len(y.shape) > 1: y = np.mean(y, axis=1) # Mono conversion
+            # Ensure float32
+            y = y.astype(np.float32)
+
+        if len(y) == 0:
+            raise ValueError("Tệp âm thanh không có dữ liệu (Empty audio)")
+
+        # Sử dụng librosa.effects.split để tìm các đoạn có âm thanh
+        # Giảm top_db xuống 25 để nhạy hơn một chút nếu người dùng gặp lỗi không tìm thấy đoạn nào
+        intervals = librosa.effects.split(y, top_db=25)
+        
+        segments = []
+        for start, end in intervals:
+            segments.append({
+                "start": float(start / sr),
+                "end": float(end / sr),
+                "duration": float((end - start) / sr)
+            })
+            
+        return {
+            "total_segments": len(segments),
+            "segments": segments,
+            "total_duration": float(len(y) / sr)
+        }
+
+    def analyze_cutoff(self, audio_path):
+        """
+        Xác định tần số cắt (Cutoff Frequency) của tín hiệu
+        Sử dụng Spectral Rolloff (tần số mà 85% năng lượng nằm dưới)
+        """
+        # Load audio
+        try:
+            y, sr = librosa.load(str(audio_path), sr=None, mono=True)
+        except Exception as e:
+            import soundfile as sf
+            y, sr = sf.read(str(audio_path))
+            if len(y.shape) > 1: y = np.mean(y, axis=1)
+            y = y.astype(np.float32)
+
+        if len(y) == 0:
+            return {"average_cutoff": 0, "max_cutoff": 0, "unit": "Hz", "warning": "No signal detected"}
+
+        # Spectral Rolloff
+        rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85)[0]
+        
+        if len(rolloff) == 0:
+            return {"average_cutoff": 0, "max_cutoff": 0, "unit": "Hz", "warning": "Could not calculate rolloff"}
+
+        avg_cutoff = np.mean(rolloff)
+        max_cutoff = np.max(rolloff)
+        
+        return {
+            "average_cutoff": float(avg_cutoff),
+            "max_cutoff": float(max_cutoff),
+            "unit": "Hz"
+        }

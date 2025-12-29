@@ -203,47 +203,76 @@
                         <p style="font-size:0.85rem; color:#888; margin:0;">Biểu đồ FFT độ phân giải cao cho cái nhìn
                             sâu sắc nhất.</p>
                     </div>
-                </div>
 
-                <!-- Results Container -->
-                <div id="voice-results">
-                    <!-- LPC Results -->
-                    <div id="lpc-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-chart-line"></i> Linear Predictive Coding Analysis</h3>
-                        <div class="lpc-content"></div>
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-vad-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-scissors"></i> Phân đoạn (VAD)
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Xác định các đoạn có âm thanh (Voice
+                            Activity Detection).</p>
                     </div>
 
-                    <!-- Waveform Results -->
-                    <div id="waveform-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-water"></i> Waveform Visualization</h3>
-                        <canvas id="waveform-canvas" width="800" height="300"
-                            style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
-                        <div class="waveform-info" style="margin-top:1rem;"></div>
-                    </div>
-
-                    <!-- Formant Results -->
-                    <div id="formant-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-mountain"></i> Formant Analysis</h3>
-                        <div class="formant-content"></div>
-                    </div>
-
-                    <!-- Pitch Results -->
-                    <div id="pitch-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-music"></i> Pitch Tracking</h3>
-                        <canvas id="pitch-canvas" width="800" height="300"
-                            style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
-                        <div class="pitch-info" style="margin-top:1rem;"></div>
-                    </div>
-
-                    <!-- Detailed Spectrogram Results -->
-                    <div id="detailed-spec-results" class="analysis-card" style="display:none;">
-                        <h3><i class="fa-solid fa-image"></i> Detailed Spectrogram (FFT-based)</h3>
-                        <div class="spec-content"></div>
+                    <div class="tool-card"
+                        style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <button class="btn-primary" id="btn-cutoff-analysis" style="width:100%; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-filter"></i> Tần số cắt
+                        </button>
+                        <p style="font-size:0.85rem; color:#888; margin:0;">Xác định giới hạn tần số (Spectral Rolloff).
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!-- Results Container -->
+            <div id="voice-results">
+                <!-- LPC Results -->
+                <div id="lpc-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-chart-line"></i> Linear Predictive Coding Analysis</h3>
+                    <div class="lpc-content"></div>
+                </div>
+
+                <!-- Waveform Results -->
+                <div id="waveform-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-water"></i> Waveform Visualization</h3>
+                    <canvas id="waveform-canvas" width="800" height="300"
+                        style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
+                    <div class="waveform-info" style="margin-top:1rem;"></div>
+                </div>
+
+                <!-- Formant Results -->
+                <div id="formant-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-mountain"></i> Formant Analysis</h3>
+                    <div class="formant-content"></div>
+                </div>
+
+                <!-- Pitch Results -->
+                <div id="pitch-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-music"></i> Pitch Tracking</h3>
+                    <canvas id="pitch-canvas" width="800" height="300"
+                        style="width:100%; border:1px solid #333; border-radius:8px;"></canvas>
+                    <div class="pitch-info" style="margin-top:1rem;"></div>
+                </div>
+
+                <!-- Detailed Spectrogram Results -->
+                <div id="detailed-spec-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-image"></i> Detailed Spectrogram (FFT-based)</h3>
+                    <div class="spec-content"></div>
+                </div>
+
+                <!-- VAD Results -->
+                <div id="vad-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-scissors"></i> Signal Segmentation (VAD)</h3>
+                    <div class="vad-content"></div>
+                </div>
+
+                <!-- Cutoff Results -->
+                <div id="cutoff-results" class="analysis-card" style="display:none;">
+                    <h3><i class="fa-solid fa-filter"></i> Cutoff Frequency Analysis</h3>
+                    <div class="cutoff-content"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -478,7 +507,7 @@
             strip.dataset.label = label;
             strip.innerHTML = `
                 <div class="track-name" style="font-weight: bold; margin-bottom: 1rem; color: #4CAF50;">${label.toUpperCase()}</div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                     <div class="control-group">
                         <div class="control-label"><span>Âm lượng</span> <span class="val">1.0</span></div>
                         <input type="range" class="control-slider vol-slider" min="0" max="2" step="0.1" value="1.0">
@@ -490,6 +519,30 @@
                     <div class="control-group">
                         <div class="control-label"><span>Cao độ</span> <span class="val">0</span> st</div>
                         <input type="range" class="control-slider pitch-slider" min="-12" max="12" step="1" value="0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Distortion</span> <span class="val">0</span></div>
+                        <input type="range" class="control-slider dist-slider" min="0" max="1" step="0.05" value="0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Echo</span> <span class="val">0</span></div>
+                        <input type="range" class="control-slider echo-slider" min="0" max="1" step="0.05" value="0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Lọc thông thấp</span> <span class="val">20k</span>Hz</div>
+                        <input type="range" class="control-slider lpf-slider" min="200" max="20000" step="100" value="20000">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Lọc thông cao</span> <span class="val">20</span>Hz</div>
+                        <input type="range" class="control-slider hpf-slider" min="20" max="2000" step="10" value="20">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Reverb</span> <span class="val">0</span></div>
+                        <input type="range" class="control-slider reverb-slider" min="0" max="1" step="0.05" value="0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label"><span>Panning</span> <span class="val">0</span></div>
+                        <input type="range" class="control-slider pan-slider" min="-1" max="1" step="0.1" value="0">
                     </div>
                 </div>
             `;
@@ -511,7 +564,12 @@
                 volume: parseFloat(strip.querySelector('.vol-slider')?.value || 1.0),
                 speed: parseFloat(strip.querySelector('.speed-slider')?.value || 1.0),
                 pitch: parseFloat(strip.querySelector('.pitch-slider')?.value || 0),
-                distortion: 0, echo: 0, lpf: 20000, hpf: 20, reverb: 0, pan: 0
+                distortion: parseFloat(strip.querySelector('.dist-slider')?.value || 0),
+                echo: parseFloat(strip.querySelector('.echo-slider')?.value || 0),
+                lpf: parseFloat(strip.querySelector('.lpf-slider')?.value || 20000),
+                hpf: parseFloat(strip.querySelector('.hpf-slider')?.value || 20),
+                reverb: parseFloat(strip.querySelector('.reverb-slider')?.value || 0),
+                pan: parseFloat(strip.querySelector('.pan-slider')?.value || 0)
             };
         }
 
@@ -785,6 +843,118 @@
                 finally {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-image"></i> Phổ chi tiết';
+                }
+            };
+        }
+
+        // VAD Analysis
+        const btnVAD = document.getElementById('btn-vad-analysis');
+        if (btnVAD) {
+            btnVAD.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/vad', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+
+                    let data;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        throw new Error("Phản hồi từ máy chủ không hợp lệ (Not JSON)");
+                    }
+
+                    if (!res.ok || data.error) throw new Error(data.error || "Không thể phân đoạn tín hiệu");
+
+                    const container = document.getElementById('vad-results');
+                    if (container) {
+                        const content = container.querySelector('.vad-content');
+                        if (content) {
+                            content.innerHTML = `
+                                <div style="background: rgba(156, 39, 176, 0.1); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                                    <h4 style="margin:0; color:#9C27B0;">Tìm thấy ${data.total_segments || 0} phân đoạn có âm thanh</h4>
+                                    <p style="margin:0.5rem 0 0 0; color:#999; font-size:0.9rem;">Tổng thời lượng: ${(data.total_duration || 0).toFixed(2)}s</p>
+                                </div>
+                                <div style="max-height: 200px; overflow-y: auto; background: #1a1a1a; padding: 1rem; border-radius: 8px;">
+                                    <table style="width: 100%; color: #ccc; font-size: 0.85rem;">
+                                        <thead><tr style="text-align: left; opacity: 0.6;"><th>STT</th><th>Bắt đầu</th><th>Kết thúc</th><th>Độ dài</th></tr></thead>
+                                        <tbody>
+                                            ${(data.segments || []).map((s, i) => `
+                                                <tr>
+                                                    <td>#${i + 1}</td>
+                                                    <td>${(s.start || 0).toFixed(2)}s</td>
+                                                    <td>${(s.end || 0).toFixed(2)}s</td>
+                                                    <td>${(s.duration || 0).toFixed(2)}s</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi VAD: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-scissors"></i> Phân đoạn (VAD)';
+                }
+            };
+        }
+
+        // Cutoff Frequency Analysis
+        const btnCutoff = document.getElementById('btn-cutoff-analysis');
+        if (btnCutoff) {
+            btnCutoff.onclick = async function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                try {
+                    const res = await fetch('/analyze/cutoff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: session.filename })
+                    });
+
+                    let data;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        throw new Error("Phản hồi từ máy chủ không hợp lệ (Not JSON)");
+                    }
+
+                    if (!res.ok || data.error) throw new Error(data.error || "Không thể tính tần số cắt");
+
+                    const container = document.getElementById('cutoff-results');
+                    if (container) {
+                        const content = container.querySelector('.cutoff-content');
+                        if (content) {
+                            content.innerHTML = `
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                                    <div class="stat-card">
+                                        <span>Tần số cắt trung bình (Spectral Rolloff)</span><br>
+                                        <b style="font-size: 1.5rem; color: #E91E63;">${(data.average_cutoff || 0).toFixed(2)} Hz</b>
+                                    </div>
+                                    <div class="stat-card">
+                                        <span>Tần số cắt tối đa</span><br>
+                                        <b style="font-size: 1.5rem; color: #E91E63;">${(data.max_cutoff || 0).toFixed(2)} Hz</b>
+                                    </div>
+                                </div>
+                                <p style="margin-top:1rem; font-size:0.85rem; color:#888;">* Tần số cắt được tính dựa trên ngưỡng 85% năng lượng phổ tích lũy.</p>
+                            `;
+                        }
+                        container.style.display = 'block';
+                        container.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (err) { alert('Lỗi Tần số cắt: ' + err.message); }
+                finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-filter"></i> Tần số cắt';
                 }
             };
         }
